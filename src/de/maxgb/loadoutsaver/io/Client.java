@@ -53,6 +53,7 @@ public class Client extends ERROR{
 	private String sessionKey="";
 	private String username="";
 	private String personaId="";
+	private String platform="1";
 	
 	
 	
@@ -174,6 +175,11 @@ public class Client extends ERROR{
 					else{
 						return NOUSERNAME;
 					}
+					index= responseString.indexOf("platform");
+					if(index !=-1){
+						platform=responseString.substring(index+10,index+11);
+						Logger.i(TAG, "PlatformId: "+platform);
+					}
 					loggedInSince=System.currentTimeMillis();
 					return OK;
 					
@@ -228,7 +234,7 @@ public class Client extends ERROR{
 				List<NameValuePair> paare = new ArrayList<NameValuePair>(4); // Post-Parameter
 				paare.add(new BasicNameValuePair("personaId", personaId));
 				paare.add(new BasicNameValuePair("personaName",username));
-				paare.add(new BasicNameValuePair("platformInt","1"));
+				paare.add(new BasicNameValuePair("platformInt",platform));
 				paare.add(new BasicNameValuePair("timestamp",tsLong.toString()));
 				
 				httppost.setEntity(new UrlEncodedFormEntity(paare));
