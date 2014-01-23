@@ -245,7 +245,7 @@ public class Client extends ERROR{
 					response.getEntity().writeTo(out);
 					out.close();
 					String responseString = out.toString();
-					//Logger.i(TAG,"GetLoadout responseString: "+responseString);
+					Logger.i(TAG,"GetLoadout responseString: "+responseString); //TODO Remove if fully working
 					
 					if(responseString.contains("success\":0")){
 						//Anwser with no success;
@@ -254,8 +254,10 @@ public class Client extends ERROR{
 					int index=responseString.indexOf("currentLoadout");
 					int index2=responseString.indexOf("succes");
 					String currentLoadout=responseString.substring(index+16, index2-3);
-					//Logger.i(TAG,"Current Loadout: "+currentLoadout.substring(0,1000)+"!Ende");
-					//Logger.i(TAG,"Current Loadout Part2:"+currentLoadout.substring(1000)+"!Ende");
+					
+					Logger.i(TAG,"Current Loadout: "+currentLoadout.substring(0,1000)+"!Ende");
+					Logger.i(TAG,"Current Loadout Part2:"+currentLoadout.substring(1000)+"!Ende");//TODO Remove if fully working
+					
 					try{
 						//Differentiate between different Loadout Types
 						switch(loadout.getType()){
