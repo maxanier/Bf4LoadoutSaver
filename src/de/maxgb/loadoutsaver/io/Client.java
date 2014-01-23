@@ -333,7 +333,7 @@ public class Client extends ERROR{
 				List<NameValuePair> paare = new ArrayList<NameValuePair>(5); // Post-Parameter
 				paare.add(new BasicNameValuePair("personaId", personaId));
 				paare.add(new BasicNameValuePair("game","2048"));
-				paare.add(new BasicNameValuePair("platformInt","1"));
+				paare.add(new BasicNameValuePair("platformInt",platform));
 				paare.add(new BasicNameValuePair("loadout",loadout));
 				paare.add(new BasicNameValuePair("timestamp",tsLong.toString()));
 				httppost.setEntity(new UrlEncodedFormEntity(paare));
