@@ -265,8 +265,11 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		               		mailIntent.putExtra(Intent.EXTRA_EMAIL  , new String[]{Constants.LOG_REPORT_EMAIL});
 		               		mailIntent.putExtra(Intent.EXTRA_SUBJECT, Constants.LOG_REPORT_SUBJECT+version);
 		               		mailIntent.putExtra(Intent.EXTRA_TEXT   , "Error: "+message);
-		               		Uri uri = Uri.fromFile(Logger.getLogFile());
-		               	    mailIntent.putExtra(Intent.EXTRA_STREAM, uri);
+		               		ArrayList<Uri> uris=new ArrayList<Uri>();
+		            		uris.add(Uri.fromFile(Logger.getLogFile()));
+		            	
+		            		uris.add(Uri.fromFile(Logger.getOldLogFile()));
+		            		mailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
 		               	    
 		               	  //Send, if possible
 		               	    try {
