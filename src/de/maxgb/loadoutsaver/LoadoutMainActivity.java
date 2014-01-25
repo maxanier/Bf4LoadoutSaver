@@ -260,8 +260,8 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		               		}
 		               		
 		               		//Send the email
-		               		Intent mailIntent = new Intent(Intent.ACTION_SEND);
-		               		mailIntent.setType("text/Message");
+		               		Intent mailIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+		               		mailIntent.setType("text/plain");
 		               		mailIntent.putExtra(Intent.EXTRA_EMAIL  , new String[]{Constants.LOG_REPORT_EMAIL});
 		               		mailIntent.putExtra(Intent.EXTRA_SUBJECT, Constants.LOG_REPORT_SUBJECT+version);
 		               		mailIntent.putExtra(Intent.EXTRA_TEXT   , "Error: "+message);
@@ -372,12 +372,19 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		
 		@Override
 		protected void onPostExecute(Integer result){
-			if(progressDialog!=null){
-				progressDialog.dismiss();
+			
+			try {
+				if(progressDialog!=null){
+					progressDialog.dismiss();
+				}
+			} catch (IllegalArgumentException e) {
+				reportError(e);
 			}
 			Resources res = getResources();
 			
 			if(result==ERROR.OK){
+				Logger.i(TAG, "Succesfully saved Loadout");
+				LoadoutManager.getInstance().addQuery();
 				updateList();
 				Toast.makeText(getApplicationContext(),res.getString(R.string.message_successfully_saved_loadout),Constants.TOAST_DURATION).show();
 			}
@@ -440,6 +447,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		protected void onPostExecute(Integer result){
 			Logger.i(TAG,"Sent Loadout with Result: "+result);
 			Resources res = getResources();
+			LoadoutManager.getInstance().addQuery();
 			updateList();
 			if(result==ERROR.OK){
 				Toast.makeText(getApplicationContext(),res.getString(R.string.message_successfully_sent_loadout),Constants.TOAST_DURATION).show();	

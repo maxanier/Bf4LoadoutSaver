@@ -202,7 +202,12 @@ public class Client extends ERROR{
 			
 			
 		}
-	
+		/**
+		 * Downloads the currently equipped Loadout and querys it in LoadoutManager. You need to call LoadoutManager.addQuery() in UI-Thread afterwards
+		 * Also logs into Battlelog if neccessary.
+		 * @param loadout Empty Loadout of the type which should be saved
+		 * @return Errorcode
+		 */
 		public synchronized int saveCurrentLoadout(Loadout loadout){
 			
 			//Check login
@@ -255,8 +260,14 @@ public class Client extends ERROR{
 					int index2=responseString.indexOf("succes");
 					String currentLoadout=responseString.substring(index+16, index2-3);
 					
-					Logger.i(TAG,"Current Loadout: "+currentLoadout.substring(0,1000)+"!Ende");
-					Logger.i(TAG,"Current Loadout Part2:"+currentLoadout.substring(1000)+"!Ende");//TODO Remove if fully working
+					try{
+					Logger.i(TAG,"Current Loadout: "+currentLoadout.substring(0,500)+"!Ende");
+					Logger.i(TAG,"Current Loadout Part 2: "+currentLoadout.substring(500,1000)+"!Ende");
+					Logger.i(TAG,"Current Loadout Part 3:"+currentLoadout.substring(1000)+"!Ende");//TODO Remove if fully working
+					}
+					catch(StringIndexOutOfBoundsException e){
+						
+					}
 					
 					try{
 						//Differentiate between different Loadout Types
@@ -271,7 +282,7 @@ public class Client extends ERROR{
 							loadout.setLoadout(Loadout.getVehicleFromFull(currentLoadout));
 							break;
 						}
-						LoadoutManager.getInstance().addLoadout(loadout);
+						LoadoutManager.getInstance().queryLoadout(loadout);
 						if(pref.getBoolean(Constants.ANALYSE_LOADOUT_KEY,false)){
 							Analyzer.analyzeLoadout(loadout);
 						}

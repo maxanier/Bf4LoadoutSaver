@@ -27,10 +27,12 @@ public class LoadoutManager {
 	private static LoadoutManager instance;
 	private final static String TAG = "LoadoutManager";
 	private ArrayList<Loadout> loadout;
+	private ArrayList<Loadout> query;
 	
 	
 	private LoadoutManager(){
 		loadout = readLoadout();
+		query = new ArrayList<Loadout>();
 	}
 	
 	public static synchronized LoadoutManager getInstance(){
@@ -118,6 +120,27 @@ public class LoadoutManager {
 			Logger.e(TAG, "Adding Loadout failed",e);
 		}
 		return false;
+	}
+	
+	/**
+	 * Queries the given Loadout object. Call addQuery() in UI Thread to add the file to the List and to save it to file.
+	 * @param temp Loadout
+	 */
+	public void queryLoadout(Loadout temp){
+		
+		query.add(temp);
+		Logger.i(TAG, "Queried Loadout: "+temp.getName());
+	}
+	
+	/**
+	 * Adds the queried Loadouts
+	 */
+	public void addQuery(){
+		for(int i=0;i<query.size();i++){
+			addLoadout(query.get(i));
+		}
+		query=new ArrayList<Loadout>();
+		Logger.i(TAG, "Added queried Loadouts");
 	}
 	
 	private boolean writeLoadout(ArrayList<Loadout> list){

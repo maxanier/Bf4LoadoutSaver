@@ -81,7 +81,7 @@ public class CustomArrayAdapter extends ArrayAdapter<Loadout>  {
     	
     	
     	nameView.setText(obj.getName());
-    	Logger.i(TAG,"Creating View for Loadout Type: "+obj.getType());
+    	//Logger.i(TAG,"Creating View for Loadout Type: "+obj.getType());
     	
     	imageView.setImageDrawable(context.getResources().getDrawable(obj.getDrawableId()));
     	
