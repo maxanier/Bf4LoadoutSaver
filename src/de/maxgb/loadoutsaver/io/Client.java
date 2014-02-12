@@ -160,7 +160,14 @@ public class Client extends ERROR{
 					}
 					index = responseString.indexOf("personaId");
 					if(index!=-1){
-						personaId=responseString.substring(index+12, index+12+9);
+						String sub=responseString.substring(index+12);
+						index=sub.indexOf('"');
+						
+						if(index==-1){
+							return NOPERSONAID;
+						}
+						
+						personaId=sub.substring(0, index);
 						Logger.i(TAG,"PersonaId: "+personaId);
 					}
 					else{
