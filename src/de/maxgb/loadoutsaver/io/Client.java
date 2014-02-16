@@ -293,6 +293,7 @@ public class Client extends ERROR{
 						if(pref.getBoolean(Constants.ANALYSE_LOADOUT_KEY,false)){
 							Analyzer.analyzeLoadout(loadout);
 						}
+						
 					}
 					catch(Exception e){
 						Logger.e(TAG,"Failed to save Loadout",e);
