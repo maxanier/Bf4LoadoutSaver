@@ -322,6 +322,9 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		task.execute(loadout);
 	}
 	
+	/**
+	 * Updates the LoadoutListView/Adapter, must be called after Loadoutlist changes
+	 */
 	public void updateList(){
 		Logger.i(TAG, "UpdatingList");
 		((CustomArrayAdapter)list.getAdapter()).notifyDataSetChanged();
@@ -424,10 +427,25 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 				return saveOldLoadoutResult;
 			}
 			
-			LoadoutManager loadoutManager=LoadoutManager.getInstance();
-			String oldLoadout=loadoutManager.getLoadout().get(loadoutManager.getLoadout().size()-1).getLoadout();
+			//Add queried Loadouts in UI-Thread
+			runOnUiThread(new Runnable(){
+
+				@Override
+				public void run() {
+					LoadoutManager.getInstance().addQuery();
+					updateList();
+				}
+				
+			});
+			
+			
+			
 			
 			try{
+				
+				LoadoutManager loadoutManager=LoadoutManager.getInstance();
+				String oldLoadout=loadoutManager.getLoadout().get(loadoutManager.getLoadout().size()-1).getLoadout();
+				
 				switch(params[0].getType()){
 				case Constants.INFANTRY_TYPE:
 					return client.sendLoadout(Loadout.getCombinedLoadout(params[0].getLoadout(), Loadout.getVehicleFromFull(oldLoadout)));
@@ -441,14 +459,17 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 				Logger.e(TAG, "Error while getting Loadoutparts for sending",e);
 				return ERROR.STRINGERROR;
 			}
+			catch(ArrayIndexOutOfBoundsException e){
+				Logger.e(TAG, "Error while retrieving old Loadout from LoadoutManager",e);
+				return ERROR.STRINGERROR;
+			}
 		}
 		
 		@Override
 		protected void onPostExecute(Integer result){
 			Logger.i(TAG,"Sent Loadout with Result: "+result);
 			Resources res = getResources();
-			LoadoutManager.getInstance().addQuery();
-			updateList();
+			
 			if(result==ERROR.OK){
 				Toast.makeText(getApplicationContext(),res.getString(R.string.message_successfully_sent_loadout),Constants.TOAST_DURATION).show();	
 			}
