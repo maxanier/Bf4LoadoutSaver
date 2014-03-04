@@ -21,6 +21,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.LoadoutMainActivity;
@@ -51,9 +53,9 @@ public class Client extends ERROR{
 	private boolean loggedIn=false;
 	private long loggedInSince=0;
 	private String sessionKey="";
-	private String username="";
+	private String personaName="";
 	private String personaId="";
-	private String platform="1";
+	private int platform=1;
 	
 	
 	
@@ -147,46 +149,134 @@ public class Client extends ERROR{
 					response.getEntity().writeTo(out);
 					out.close();
 					String responseString = out.toString();
-					Logger.i(TAG,responseString);
+					Logger.i(TAG,"Response String: "+responseString);
 					
-					//Read out values
-					int index = responseString.indexOf("sessionKey");
-					if(index!=-1){
-						sessionKey=responseString.substring(index+13, index+13+32);
-						Logger.i(TAG,"SessionKey: "+sessionKey);
-					}
-					else{
-						return NOSESSIONKEY;
-					}
-					index = responseString.indexOf("personaId");
-					if(index!=-1){
-						String sub=responseString.substring(index+12);
-						index=sub.indexOf('"');
+					//Read out values------------------------------------------------------------------
+					sessionKey=null;
+					platform=0;
+					personaName=null;
+					personaId=null;
+					
+					
+					
+					try {
+						JSONObject responseJson=new JSONObject(responseString);
+						JSONObject data=responseJson.getJSONObject("data");
 						
-						if(index==-1){
-							return NOPERSONAID;
+						if(data!=null){
+							
+							try {
+								sessionKey=data.getString("sessionKey");
+							} catch (JSONException e) {
+
+							}
+							
+							
+							JSONObject activePersona=null;
+							try {
+								activePersona = data.getJSONObject("activePersonas").getJSONObject("2");
+							} catch (JSONException e1) {
+
+							}
+							
+							if(activePersona!=null){
+								
+								try {
+									platform=activePersona.getInt("platform");
+								} catch (JSONException e) {
+
+								}
+
+								
+								
+								JSONObject persona=null;
+								try {
+									persona = activePersona.getJSONObject("persona");
+								} catch (JSONException e) {
+
+								}
+								
+								if(persona!=null){
+									try {
+										personaName=persona.getString("personaName");
+										personaId=persona.getString("personaId");
+									} catch (JSONException e) {
+
+									}
+								}
+								else{
+									Logger.w(TAG, "persona not found");
+								}
+							}
+							else{
+								Logger.w(TAG, "activePersona not found");
+							}
+							
+							
+						}
+						else{
+							Logger.w(TAG, "DataObject in response json is null");
 						}
 						
-						personaId=sub.substring(0, index);
-						Logger.i(TAG,"PersonaId: "+personaId);
+						
+					} catch (JSONException e) {
+						Logger.w(TAG, "Failed to parse response to JSON");
 					}
-					else{
-						return NOPERSONAID;
+					
+					Logger.i(TAG, "After JSON analysis the following information was found: ID: "+personaId+", Name: "+(personaName)+", Key: "+sessionKey+", Platform: "+platform);
+							
+					
+					//In case something was not found -> String analysis
+					int index;
+					if(sessionKey==null){
+						index = responseString.indexOf("sessionKey");
+						if(index!=-1){
+							sessionKey=responseString.substring(index+13, index+13+32);
+							Logger.i(TAG,"SessionKey: "+sessionKey);
+						}
+						else{
+							return NOSESSIONKEY;
+						}
 					}
-					index = responseString.indexOf("username");
-					if(index!=-1){
-						String subString=responseString.substring(index+11);
-						username=subString.substring(0,subString.indexOf('"'));
-						Logger.i(TAG,"Username: "+username);
+					
+					if(personaId==null){
+						index = responseString.indexOf("personaId");
+						if(index!=-1){
+							String sub=responseString.substring(index+12);
+							index=sub.indexOf('"');
+							
+							if(index==-1){
+								return NOPERSONAID;
+							}
+							
+							personaId=sub.substring(0, index);
+							
+						}
+						else{
+							return NOPERSONAID;
+						}
 					}
-					else{
-						return NOUSERNAME;
+					
+					if(personaName==null){
+						index = responseString.indexOf("username");
+						if(index!=-1){
+							String subString=responseString.substring(index+11);
+							personaName=subString.substring(0,subString.indexOf('"'));
+							
+						}
+						else{
+							return NOUSERNAME;
+						}
 					}
-					index= responseString.indexOf("platform");
-					if(index !=-1){
-						platform=responseString.substring(index+10,index+11);
-						Logger.i(TAG, "PlatformId: "+platform);
+					if(platform==0){
+						index= responseString.indexOf("platform");
+						if(index !=-1){
+							platform=Integer.parseInt(responseString.substring(index+10,index+11));
+							Logger.i(TAG, "PlatformId: "+platform);
+						}
 					}
+					Logger.i(TAG, "Login analysis complete: SessionKey: "+sessionKey+", PersonaName: "+personaName+", PersonaId: "+personaId+", Platform: "+platform);
+					
 					loggedInSince=System.currentTimeMillis();
 					return OK;
 					
@@ -227,7 +317,7 @@ public class Client extends ERROR{
 			if(sessionKey==null||sessionKey.equals("")){
 				return NOSESSIONKEY;
 			}
-			if(username==null||username.equals("")){
+			if(personaName==null||personaName.equals("")){
 				return NOUSERNAME;
 			}
 			if(personaId==null||sessionKey.equals("")){
@@ -245,8 +335,8 @@ public class Client extends ERROR{
 		
 				List<NameValuePair> paare = new ArrayList<NameValuePair>(4); // Post-Parameter
 				paare.add(new BasicNameValuePair("personaId", personaId));
-				paare.add(new BasicNameValuePair("personaName",username));
-				paare.add(new BasicNameValuePair("platformInt",platform));
+				paare.add(new BasicNameValuePair("personaName",personaName));
+				paare.add(new BasicNameValuePair("platformInt",""+platform));
 				paare.add(new BasicNameValuePair("timestamp",tsLong.toString()));
 				
 				httppost.setEntity(new UrlEncodedFormEntity(paare));
@@ -257,7 +347,14 @@ public class Client extends ERROR{
 					response.getEntity().writeTo(out);
 					out.close();
 					String responseString = out.toString();
-					Logger.i(TAG,"GetLoadout responseString: "+responseString); //TODO Remove if fully working
+					String debugShortResponse;
+					try {
+						debugShortResponse=responseString.substring(0,200);
+					} catch (Exception e1) {
+						debugShortResponse=responseString;
+					}
+					
+					Logger.i(TAG,"GetLoadout short responseString: "+debugShortResponse); //TODO Remove if fully working
 					
 					if(responseString.contains("success\":0")){
 						//Anwser with no success;
@@ -267,6 +364,7 @@ public class Client extends ERROR{
 					int index2=responseString.indexOf("succes");
 					String currentLoadout=responseString.substring(index+16, index2-3);
 					
+					/*
 					try{
 					Logger.i(TAG,"Current Loadout: "+currentLoadout.substring(0,500)+"!Ende");
 					Logger.i(TAG,"Current Loadout Part 2: "+currentLoadout.substring(500,1000)+"!Ende");
@@ -275,6 +373,7 @@ public class Client extends ERROR{
 					catch(StringIndexOutOfBoundsException e){
 						
 					}
+					*/
 					
 					try{
 						//Differentiate between different Loadout Types
@@ -333,7 +432,7 @@ public class Client extends ERROR{
 			if(sessionKey==null||sessionKey.equals("")){
 				return NOSESSIONKEY;
 			}
-			if(username==null||username.equals("")){
+			if(personaName==null||personaName.equals("")){
 				return NOUSERNAME;
 			}
 			if(personaId==null||sessionKey.equals("")){
@@ -351,8 +450,8 @@ public class Client extends ERROR{
 			try {
 				List<NameValuePair> paare = new ArrayList<NameValuePair>(5); // Post-Parameter
 				paare.add(new BasicNameValuePair("personaId", personaId));
-				paare.add(new BasicNameValuePair("game","2048"));
-				paare.add(new BasicNameValuePair("platformInt",platform));
+				
+				paare.add(new BasicNameValuePair("platformInt",""+platform));
 				paare.add(new BasicNameValuePair("loadout",loadout));
 				paare.add(new BasicNameValuePair("timestamp",tsLong.toString()));
 				httppost.setEntity(new UrlEncodedFormEntity(paare));
