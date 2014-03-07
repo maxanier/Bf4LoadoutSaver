@@ -16,4 +16,5 @@ public class ERROR {
 	public final static int FAILEDTOSAVE=6;
 	public final static int STRINGERROR=7;
 	public final static int NOPLATFORMID=8;
+	public final static int INTERNALSERVERERROR=9;
 }
