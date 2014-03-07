@@ -8,6 +8,7 @@ import de.maxgb.loadoutsaver.util.Constants;
 import de.maxgb.loadoutsaver.util.Loadout;
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -83,7 +84,8 @@ public class CustomArrayAdapter extends ArrayAdapter<Loadout>  {
     	nameView.setText(obj.getName());
     	//Logger.i(TAG,"Creating View for Loadout Type: "+obj.getType());
     	
-    	imageView.setImageDrawable(context.getResources().getDrawable(obj.getDrawableId()));
+
+    	imageView.setImageBitmap(obj.getImage(context));
     	
     	return convertView;
     }

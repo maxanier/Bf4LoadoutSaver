@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioButton;
 
@@ -16,7 +17,7 @@ import android.widget.RadioButton;
 public class LoadoutNameDialog extends DialogFragment {
 
 	public interface  LoadoutNameDialogListener {
-		public void addCurrentLoadout(String name,int type);
+		public void addCurrentLoadout(String name,boolean weapon,boolean kit,boolean vehicle);
 
 	}
 
@@ -53,14 +54,15 @@ public class LoadoutNameDialog extends DialogFragment {
 						if(name.equals("")){
 							name="Loadout";
 						}
-						int type=Constants.ALL_TYPE;
-						if(((RadioButton)thisDialog.findViewById(R.id.radio_infantry)).isChecked()){
-							type=Constants.INFANTRY_TYPE;
+						boolean w = ((CheckBox)thisDialog.findViewById(R.id.dialog_box_weapons)).isChecked();
+						boolean k = ((CheckBox)thisDialog.findViewById(R.id.dialog_box_kits)).isChecked();
+						boolean v=((CheckBox)thisDialog.findViewById(R.id.dialog_box_vehicles)).isChecked();
+						if(!w&&!k&&!v){
+							w=true;
+							k=true;
+							v=true;
 						}
-						else if(((RadioButton)thisDialog.findViewById(R.id.radio_vehicle)).isChecked()){
-							type=Constants.VEHICLE_TYPE;
-						}
-						mListener.addCurrentLoadout(name,type);
+						mListener.addCurrentLoadout(name,w,k,v);
 
 					}
 				}).setNegativeButton(Messages.getString("LoadoutNameDialog.Abort"), //$NON-NLS-1$

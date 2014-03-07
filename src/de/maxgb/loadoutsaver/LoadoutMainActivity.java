@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
@@ -19,10 +22,10 @@ import de.maxgb.loadoutsaver.io.Client;
 import de.maxgb.loadoutsaver.io.LoadoutManager;
 import de.maxgb.loadoutsaver.util.Constants;
 import de.maxgb.loadoutsaver.util.ERROR;
-import de.maxgb.loadoutsaver.util.InfantryLoadout;
+
 import de.maxgb.loadoutsaver.util.InfoBox;
 import de.maxgb.loadoutsaver.util.Loadout;
-import de.maxgb.loadoutsaver.util.VehicleLoadout;
+
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DialogFragment;
@@ -152,7 +155,9 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		InfoBox.showInstructionBox(this,InfoBox.Instruction.MAIN);
 
 
-
+		if(loadoutManager.checkIfOldFileExists()){
+			InfoBox.showInfoBox(this, "Old Loadouts deleted", "Because of a bigger update behind the scenes all previous loadouts had to be deleted. Sorry.");
+		}
 			
 		
 	}
@@ -190,25 +195,16 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		dialog.show(getSupportFragmentManager(),"LoadoutNameDialog");
 	}
 	
-	public void addCurrentLoadout(String name,int type){
+	@Override
+	public void addCurrentLoadout(String name,boolean w,boolean k,boolean v){
 		
 		if(!isOnline()){
 			Toast.makeText(getApplicationContext(),getResources().getString(R.string.message_no_connection),Constants.TOAST_DURATION).show();
 			return;
 		}
-		Loadout loadout;
-		if(type==Constants.INFANTRY_TYPE){
-			Logger.i(TAG,"Creating Infantry Loadout");
-			loadout=new InfantryLoadout(name,"");
-		}
-		else if(type==Constants.VEHICLE_TYPE){
-			Logger.i(TAG,"Creating Vehicle Loadout");
-			loadout=new VehicleLoadout(name,"");
-		}
-		else{
-			Logger.i(TAG,"Creating Loadout");
-			loadout=new Loadout(name,"");
-		}
+		Loadout loadout=new Loadout(name,new JSONObject(),w,k,v);
+		
+		Logger.i(TAG, "User wants new Loadout: "+loadout.toString(" "));
 		SaveLoadoutTask task=new SaveLoadoutTask();
 		task.execute(loadout);
 	}
@@ -419,9 +415,9 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 				return ERROR.MISSINGPARAMETER;
 			}
 			Client client=Client.getInstance(getSharedPreferences());
-			String loadout=params[0].getLoadout();
 			
-			int saveOldLoadoutResult=client.saveCurrentLoadout(new Loadout("Old Loadout",""));
+			
+			int saveOldLoadoutResult=client.saveCurrentLoadout(new Loadout("Old Loadout",new JSONObject(),true,true,true));
 			if(saveOldLoadoutResult!=ERROR.OK){
 				Logger.w(TAG,"Failed to save old Loadout");
 				return saveOldLoadoutResult;
@@ -442,27 +438,32 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 			
 			
 			try{
+				Loadout loadout=params[0];
 				
 				LoadoutManager loadoutManager=LoadoutManager.getInstance();
-				String oldLoadout=loadoutManager.getLoadout().get(loadoutManager.getLoadout().size()-1).getLoadout();
-				
-				switch(params[0].getType()){
-				case Constants.INFANTRY_TYPE:
-					return client.sendLoadout(Loadout.getCombinedLoadout(params[0].getLoadout(), Loadout.getVehicleFromFull(oldLoadout)));
-				case Constants.VEHICLE_TYPE:
-					return client.sendLoadout(Loadout.getCombinedLoadout(Loadout.getInfantryFromFull(oldLoadout),params[0].getLoadout()));
-				default:
-					return client.sendLoadout(params[0].getLoadout());
+				JSONObject full=client.getLastFullLoadout();
+				if(full==null){
+					return ERROR.NOFULLLOADOUT;
 				}
+				
+				if(loadout.containsKits()){
+					full.put(Constants.BJSON_KITS,loadout.getLoadout().get(Constants.BJSON_KITS));
+				}
+				if(loadout.containsVehicle()){
+					full.put(Constants.BJSON_VEHICLES, loadout.getLoadout().get(Constants.BJSON_VEHICLES));
+				}
+				if(loadout.containsWeapons()){
+					full.put(Constants.BJSON_VEHICLES, loadout.getLoadout().get(Constants.BJSON_WEAPONS));
+				}
+				
+
+				return client.sendLoadout(full.toString());
 			}
-			catch(java.lang.StringIndexOutOfBoundsException e){
-				Logger.e(TAG, "Error while getting Loadoutparts for sending",e);
-				return ERROR.STRINGERROR;
+			catch(JSONException e){
+				Logger.e(TAG, "Error while putting Loadout together for sending",e);
+				return ERROR.PARSINGERROR;
 			}
-			catch(ArrayIndexOutOfBoundsException e){
-				Logger.e(TAG, "Error while retrieving old Loadout from LoadoutManager",e);
-				return ERROR.STRINGERROR;
-			}
+
 		}
 		
 		@Override

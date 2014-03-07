@@ -12,15 +12,11 @@ import java.util.ArrayList;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import loadoutanalyzer.Analyzer;
 
-import android.util.Log;
 
 import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.util.Constants;
-import de.maxgb.loadoutsaver.util.InfantryLoadout;
 import de.maxgb.loadoutsaver.util.Loadout;
-import de.maxgb.loadoutsaver.util.VehicleLoadout;
 
 public class LoadoutManager {
 	/*
@@ -227,5 +223,12 @@ public class LoadoutManager {
 		return loadoutFile;
 	}
 	
-	
+	public boolean checkIfOldFileExists(){
+		File loadoutFile=new File(Constants.DIRECTORY+Constants.LOADOUT_OLD_FILE_NAME);
+		if(loadoutFile.exists()){
+			loadoutFile.delete();
+			return true;
+		}
+		return false;
+	}
 }

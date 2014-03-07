@@ -57,6 +57,8 @@ public class Client extends ERROR{
 	private String personaId="";
 	private int platform=1;
 	
+	private Loadout lastFullLoadout;
+	
 	
 	
 	
@@ -70,6 +72,7 @@ public class Client extends ERROR{
 				Constants.CONNECTION_TIMEOUT);
 		httpclient = new DefaultHttpClient(
 				httpParams); 
+		lastFullLoadout=null;
 	}
 	
 	public static synchronized Client getInstance(SharedPreferences pref){
@@ -360,9 +363,25 @@ public class Client extends ERROR{
 						//Anwser with no success;
 						return REQUESTFAILED;
 					}
-					int index=responseString.indexOf("currentLoadout");
-					int index2=responseString.indexOf("succes");
-					String currentLoadout=responseString.substring(index+16, index2-3);
+					
+					JSONObject currentLoadout =null;
+					JSONObject vehicles=null;
+					JSONObject weapons=null;
+					JSONObject kits=null;
+					
+					try {
+						JSONObject responseJson = new JSONObject(responseString);
+						JSONObject data = responseJson.getJSONObject(Constants.BJSON_DATA);
+						currentLoadout = data.getJSONObject(Constants.BJSON_CURRENT_LOADOUT);
+						vehicles=currentLoadout.getJSONObject(Constants.BJSON_VEHICLES);
+						weapons=currentLoadout.getJSONObject(Constants.BJSON_WEAPONS);
+						kits=currentLoadout.getJSONObject(Constants.BJSON_KITS);
+						
+					} catch (JSONException e1) {
+						Logger.e(TAG, "Failed to parse loadout answer to JSON",e1);
+						return INTERNALSERVERERROR;
+					}
+					
 					
 					/*
 					try{
@@ -374,29 +393,31 @@ public class Client extends ERROR{
 						
 					}
 					*/
-					
-					try{
-						//Differentiate between different Loadout Types
-						switch(loadout.getType()){
-						case Constants.ALL_TYPE:
-							loadout.setLoadout(currentLoadout);
-							break;
-						case Constants.INFANTRY_TYPE:
-							loadout.setLoadout(Loadout.getInfantryFromFull(currentLoadout));
-							break;
-						case Constants.VEHICLE_TYPE:
-							loadout.setLoadout(Loadout.getVehicleFromFull(currentLoadout));
-							break;
+					try {
+						JSONObject finishedLoadout=new JSONObject();
+						if(loadout.containsKits()){
+							finishedLoadout.put(Constants.BJSON_KITS, kits);
 						}
-						LoadoutManager.getInstance().queryLoadout(loadout);
-						if(pref.getBoolean(Constants.ANALYSE_LOADOUT_KEY,false)){
-							Analyzer.analyzeLoadout(loadout);
+						if(loadout.containsVehicle()){
+							finishedLoadout.put(Constants.BJSON_VEHICLES, vehicles);
 						}
-						
+						if(loadout.containsWeapons()){
+							finishedLoadout.put(Constants.BJSON_WEAPONS, weapons);
+						}
+					} catch (JSONException e) {
+						Logger.e(TAG, "Failed to add parts to finished Loadout",e);
+						return this.FAILEDTOSAVE;
 					}
-					catch(Exception e){
-						Logger.e(TAG,"Failed to save Loadout",e);
-						return FAILEDTOSAVE;
+					
+						
+					LoadoutManager.getInstance().queryLoadout(loadout);
+					
+					/*Temporally disabled
+					 * if(pref.getBoolean(Constants.ANALYSE_LOADOUT_KEY,false)){
+							Analyzer.analyzeLoadout(loadout);
+					}*/
+					if(loadout.containsKits()&&loadout.containsVehicle()&&loadout.containsWeapons()){
+						lastFullLoadout=loadout.clone();
 					}
 					return OK;
 					
@@ -505,6 +526,13 @@ public class Client extends ERROR{
 
 		public long getLoggedInSince() {
 			return loggedInSince;
+		}
+		
+		public JSONObject getLastFullLoadout(){
+			if(lastFullLoadout==null){
+				return null;
+			}
+			return lastFullLoadout.getLoadout();
 		}
 
 	
