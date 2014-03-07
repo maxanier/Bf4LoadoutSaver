@@ -23,7 +23,8 @@ public class Constants {
 	
 	//Directorys and files
 	public static final String DIRECTORY = Environment.getExternalStorageDirectory().getPath()+"/bf4Loadout/";
-	public static final String LOADOUT_FILE_NAME="loadout.txt";
+	public static final String LOADOUT_FILE_NAME="loadout";
+	public static final String LOADOUT_OLD_FILE_NAME="loadout.txt";
 	public static final String LOADOUT_SEPERATOR="!";
 	
 	//Loadout types
@@ -35,6 +36,16 @@ public class Constants {
 	public static final int TOAST_DURATION=3;
 	public static final String LOG_REPORT_EMAIL="app@maxgb.de";
 	public static final String LOG_REPORT_SUBJECT="Error Report: Loadoutsaver version: ";
+	
+	//Battlelog JSON Names
+	public static final String BJSON_WEAPONS="weapons";
+	public static final String BJSON_VEHICLES="vehicles";
+	public static final String BJSON_KITS="kits";
+	public static final String BJSON_CURRENT_LOADOUT="currentLoadout";
+	public static final String BJSON_DATA="data";
+	public static final String BJSON_PERSONAID="personaId";
+	public static final String BJSON_PERSONANAME="personaName";
+	public static final String BJSON_PLATFORMINT="platformInt";
 	
 
 	

@@ -83,7 +83,7 @@ public class Loadout implements Cloneable {
 	
 	public Bitmap getImage(Context context){
 		if(weapons && kits && vehicles){
-			return GraphicUtils.textAsBitmap("ALL", 10, Color.BLACK);
+			return GraphicUtils.textAsBitmap("ALL", 50, Color.WHITE);
 		}
 		
 		ArrayList<Bitmap> images=new ArrayList<Bitmap>();

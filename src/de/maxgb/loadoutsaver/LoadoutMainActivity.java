@@ -390,6 +390,9 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 			else if (result==ERROR.NOSESSIONKEY){
 				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\n Probably failed to login, please check your Login information");
 			}
+			else if(result==ERROR.TIMEOUT){
+				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\n Server Timeout. Either the server or your internet is too slow");
+			}
 			else{
 				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result);
 			}
@@ -447,16 +450,16 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 				}
 				
 				if(loadout.containsKits()){
-					full.put(Constants.BJSON_KITS,loadout.getLoadout().get(Constants.BJSON_KITS));
+					full.put(Constants.BJSON_KITS,loadout.getLoadout().getJSONArray(Constants.BJSON_KITS));
 				}
 				if(loadout.containsVehicle()){
-					full.put(Constants.BJSON_VEHICLES, loadout.getLoadout().get(Constants.BJSON_VEHICLES));
+					full.put(Constants.BJSON_VEHICLES, loadout.getLoadout().getJSONArray(Constants.BJSON_VEHICLES));
 				}
 				if(loadout.containsWeapons()){
-					full.put(Constants.BJSON_VEHICLES, loadout.getLoadout().get(Constants.BJSON_WEAPONS));
+					full.put(Constants.BJSON_WEAPONS, loadout.getLoadout().getJSONObject(Constants.BJSON_WEAPONS));
 				}
 				
-
+				Logger.i(TAG, full.toString());
 				return client.sendLoadout(full.toString());
 			}
 			catch(JSONException e){

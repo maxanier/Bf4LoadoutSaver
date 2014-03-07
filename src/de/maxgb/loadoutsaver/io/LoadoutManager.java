@@ -62,7 +62,7 @@ public class LoadoutManager {
 			
 			String line = br.readLine();
 			
-			if(line.startsWith("Version:")){
+			if(line!=null&&line.startsWith("Version:")){
 				version=line.replace("Version:","");
 				line=br.readLine();
 			}

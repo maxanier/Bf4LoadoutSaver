@@ -3,6 +3,7 @@ package de.maxgb.loadoutsaver.io;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.SocketTimeoutException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -57,7 +59,7 @@ public class Client extends ERROR{
 	private String personaId="";
 	private int platform=1;
 	
-	private Loadout lastFullLoadout;
+	private JSONObject lastFullLoadout;
 	
 	
 	
@@ -293,7 +295,11 @@ public class Client extends ERROR{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return REQUESTFAILED;
-			} catch (IOException e) {
+			} catch (SocketTimeoutException e ){
+				Logger.w(TAG, "Timeout during login");
+				return TIMEOUT;
+			}
+			catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return REQUESTFAILED;
@@ -365,17 +371,17 @@ public class Client extends ERROR{
 					}
 					
 					JSONObject currentLoadout =null;
-					JSONObject vehicles=null;
+					JSONArray vehicles=null;
 					JSONObject weapons=null;
-					JSONObject kits=null;
+					JSONArray kits=null;
 					
 					try {
 						JSONObject responseJson = new JSONObject(responseString);
 						JSONObject data = responseJson.getJSONObject(Constants.BJSON_DATA);
 						currentLoadout = data.getJSONObject(Constants.BJSON_CURRENT_LOADOUT);
-						vehicles=currentLoadout.getJSONObject(Constants.BJSON_VEHICLES);
+						vehicles=currentLoadout.getJSONArray(Constants.BJSON_VEHICLES);
 						weapons=currentLoadout.getJSONObject(Constants.BJSON_WEAPONS);
-						kits=currentLoadout.getJSONObject(Constants.BJSON_KITS);
+						kits=currentLoadout.getJSONArray(Constants.BJSON_KITS);
 						
 					} catch (JSONException e1) {
 						Logger.e(TAG, "Failed to parse loadout answer to JSON",e1);
@@ -404,6 +410,8 @@ public class Client extends ERROR{
 						if(loadout.containsWeapons()){
 							finishedLoadout.put(Constants.BJSON_WEAPONS, weapons);
 						}
+						
+						loadout.setLoadout(finishedLoadout);
 					} catch (JSONException e) {
 						Logger.e(TAG, "Failed to add parts to finished Loadout",e);
 						return this.FAILEDTOSAVE;
@@ -416,9 +424,7 @@ public class Client extends ERROR{
 					 * if(pref.getBoolean(Constants.ANALYSE_LOADOUT_KEY,false)){
 							Analyzer.analyzeLoadout(loadout);
 					}*/
-					if(loadout.containsKits()&&loadout.containsVehicle()&&loadout.containsWeapons()){
-						lastFullLoadout=loadout.clone();
-					}
+					lastFullLoadout=currentLoadout;
 					return OK;
 					
 				}
@@ -529,11 +535,8 @@ public class Client extends ERROR{
 		}
 		
 		public JSONObject getLastFullLoadout(){
-			if(lastFullLoadout==null){
-				return null;
-			}
-			return lastFullLoadout.getLoadout();
-		}
 
+			return lastFullLoadout;
+		}
 	
 }
