@@ -17,4 +17,7 @@ public class ERROR {
 	public final static int STRINGERROR=7;
 	public final static int NOPLATFORMID=8;
 	public final static int INTERNALSERVERERROR=9;
+	public final static int NOFULLLOADOUT=10;
+	public final static int PARSINGERROR=11;
+	public final static int TIMEOUT=12;
 }
