@@ -9,6 +9,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import loadoutanalyzer.Analyzer;
 
 import android.util.Log;
@@ -21,13 +24,14 @@ import de.maxgb.loadoutsaver.util.VehicleLoadout;
 
 public class LoadoutManager {
 	/*
-	 * Save Format: <name>!<type>!<loadoutString> linebreak
-	 * Types refer to Constants
+	 * Save Format: <name>!<weapons>!<kits>!<weapons>!<loadoutString> linebreak
+	 * Types are either 0 for false or 1 for true
 	 */
 	private static LoadoutManager instance;
 	private final static String TAG = "LoadoutManager";
 	private ArrayList<Loadout> loadout;
 	private ArrayList<Loadout> query;
+	private final String CURRENTVERSION="2";
 	
 	
 	private LoadoutManager(){
@@ -45,7 +49,9 @@ public class LoadoutManager {
 	private ArrayList<Loadout> readLoadout(){
 		Logger.i(TAG,"Start reading Loadout");
 		ArrayList<Loadout> temp = new ArrayList<Loadout>();
+		String version="0";
 		File loadoutFile = new File(Constants.DIRECTORY+Constants.LOADOUT_FILE_NAME);
+		
 		if(!loadoutFile.exists()){
 			Logger.w(TAG,"LoadoutFile doesn´t exist");
 			return temp;
@@ -60,34 +66,57 @@ public class LoadoutManager {
 			
 			String line = br.readLine();
 			
+			if(line.startsWith("Version:")){
+				version=line.replace("Version:","");
+				line=br.readLine();
+			}
+			
 			while(line !=null){
-				String[] lineSplitted = line.trim().split(Constants.LOADOUT_SEPERATOR);
-				if(lineSplitted.length==3){
-					if(lineSplitted[1].equals(""+Constants.ALL_TYPE)){
-						temp.add(new Loadout(lineSplitted[0],lineSplitted[2]));
-					}
-					else if(lineSplitted[1].equals(""+Constants.INFANTRY_TYPE)){
-						temp.add(new InfantryLoadout(lineSplitted[0],lineSplitted[2]));
-					}
-					else{
-						temp.add(new VehicleLoadout(lineSplitted[0],lineSplitted[2]));
-					}
-					
+				Loadout l=readLoadout(line);
+				if(l!=null){
+					temp.add(l);
 				}
 				line= br.readLine();
 			}
 			
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Logger.e(TAG,"FileNotFoundException even though file existence was checked",e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Logger.e(TAG, "IOException while reading Loadout",e);
 		}
 		
 		Logger.i(TAG,"Found "+temp.size()+" Loadouts");
 		return temp;
 	}
+	
+	/**
+	 * Converts a single loadout line into a new loadout object. 
+	 * @param s
+	 * @return
+	 */
+	private Loadout readLoadout(String s){
+		if(s==null) return null;
+		
+		try {
+			String[] splitted=s.split(Constants.LOADOUT_SEPERATOR);
+			if(splitted.length==5){
+				String name=splitted[0];
+				boolean weapons= splitted[1].equals("1");
+				boolean kits = splitted[2].equals("1");
+				boolean vehicles=splitted[3].equals("1");
+				
+				JSONObject loadout=new JSONObject(splitted[4]);
+				return new Loadout(name,loadout,weapons,kits,vehicles);
+			}
+			else{
+				Logger.e(TAG,"Loadoutline did not contain 5 parts");
+			}
+		} catch (JSONException e) {
+			Logger.e(TAG, "Failed to parse saved json loadout string to json");
+		}
+		return null;
+	}
+	
 	
 	/**
 	 * Adds a Loadout to the ArrayList and writes it to the file
@@ -98,18 +127,20 @@ public class LoadoutManager {
 	public boolean addLoadout(Loadout temp){
 		File directory=new File(Constants.DIRECTORY);
 		directory.mkdir();
-		File loadoutFile=new File(Constants.DIRECTORY+Constants.LOADOUT_FILE_NAME);
+		
 		for(int i=0;i<loadout.size();i++){
 			if(loadout.get(i).getName().equals(temp.getName())){
 				removeLoadout(i);
 			}
 		}
 		
+		File loadoutFile=getLoadoutFile();
+		
 		try {
 			loadoutFile.createNewFile();
 			BufferedWriter output=new BufferedWriter(new FileWriter(loadoutFile,true));
 			output.newLine();
-			output.append(temp.getName()+Constants.LOADOUT_SEPERATOR+temp.getType()+Constants.LOADOUT_SEPERATOR+temp.getLoadout());
+			output.append(temp.toString(Constants.LOADOUT_SEPERATOR));
 			output.close();
 			loadout.add(temp);
 			
@@ -145,16 +176,13 @@ public class LoadoutManager {
 	
 	private boolean writeLoadout(ArrayList<Loadout> list){
 		
-		File directory=new File(Constants.DIRECTORY);
-		directory.mkdir();
-		File loadoutFile=new File(Constants.DIRECTORY+Constants.LOADOUT_FILE_NAME);
+		File loadoutFile=getLoadoutFile();
 		
 		try {
-			loadoutFile.createNewFile();
 			BufferedWriter output=new BufferedWriter(new FileWriter(loadoutFile,false));
 			for(int i=0;i<list.size();i++){
 				output.newLine();
-				output.append(list.get(i).getName()+Constants.LOADOUT_SEPERATOR+list.get(i).getType()+Constants.LOADOUT_SEPERATOR+list.get(i).getLoadout());
+				output.append(list.get(i).toString(Constants.LOADOUT_SEPERATOR));
 			}
 
 			output.close();
@@ -177,6 +205,26 @@ public class LoadoutManager {
 	}
 	public void removeLoadout(int position){
 		removeLoadout(loadout.get(position));
+	}
+	
+	private File getLoadoutFile(){
+		File directory=new File(Constants.DIRECTORY);
+		directory.mkdir();
+		File loadoutFile=new File(Constants.DIRECTORY+Constants.LOADOUT_FILE_NAME);
+		
+		try {
+			if(loadoutFile.createNewFile()){
+				BufferedWriter output=new BufferedWriter(new FileWriter(loadoutFile,false));
+				output.append("VERSION:"+CURRENTVERSION);
+				output.newLine();
+				output.flush();
+				output.close();
+			}
+		} catch (IOException e) {
+			Logger.e(TAG, "Failed to create a new file and to fill it with version info");
+		}
+		
+		return loadoutFile;
 	}
 	
 	
