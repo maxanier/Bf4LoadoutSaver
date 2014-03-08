@@ -30,7 +30,7 @@ import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.LoadoutMainActivity;
 import de.maxgb.loadoutsaver.R;
 import de.maxgb.loadoutsaver.util.Constants;
-import de.maxgb.loadoutsaver.util.ERROR;
+import de.maxgb.loadoutsaver.util.RESULT;
 import de.maxgb.loadoutsaver.util.Loadout;
 
 
@@ -44,7 +44,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
-public class Client extends ERROR{
+public class Client {
 	private final String TAG="Client";
 	private static Client instance;
 	private SharedPreferences pref;
@@ -122,7 +122,7 @@ public class Client extends ERROR{
 			if(!isLoggedIn()==false||System.currentTimeMillis()-getLoggedInSince()>Constants.LOGIN_TIMEOUT){
 				return login();
 			}
-			return ERROR.OK;
+			return RESULT.OK;
 		}
 		
 		
@@ -240,7 +240,7 @@ public class Client extends ERROR{
 							Logger.i(TAG,"SessionKey: "+sessionKey);
 						}
 						else{
-							return NOSESSIONKEY;
+							return RESULT.NOSESSIONKEY;
 						}
 					}
 					
@@ -251,14 +251,14 @@ public class Client extends ERROR{
 							index=sub.indexOf('"');
 							
 							if(index==-1){
-								return NOPERSONAID;
+								return RESULT.NOPERSONAID;
 							}
 							
 							personaId=sub.substring(0, index);
 							
 						}
 						else{
-							return NOPERSONAID;
+							return RESULT.NOPERSONAID;
 						}
 					}
 					
@@ -270,7 +270,7 @@ public class Client extends ERROR{
 							
 						}
 						else{
-							return NOUSERNAME;
+							return RESULT.NOUSERNAME;
 						}
 					}
 					if(platform==0){
@@ -283,26 +283,26 @@ public class Client extends ERROR{
 					Logger.i(TAG, "Login analysis complete: SessionKey: "+sessionKey+", PersonaName: "+personaName+", PersonaId: "+personaId+", Platform: "+platform);
 					
 					loggedInSince=System.currentTimeMillis();
-					return OK;
+					return RESULT.OK;
 					
 				}
 				else{
-					return REQUESTFAILED;
+					return RESULT.REQUESTFAILED;
 				}
 				
 				
 			} catch (ClientProtocolException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				return REQUESTFAILED;
+				return RESULT.REQUESTFAILED;
 			} catch (SocketTimeoutException e ){
 				Logger.w(TAG, "Timeout during login");
-				return TIMEOUT;
+				return RESULT.TIMEOUT;
 			}
 			catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				return REQUESTFAILED;
+				return RESULT.REQUESTFAILED;
 			}
 			
 			
@@ -318,19 +318,19 @@ public class Client extends ERROR{
 			
 			//Check login
 			int loginResult = checkLogin();
-			if(loginResult!=ERROR.OK){
+			if(loginResult!=RESULT.OK){
 				Logger.w(TAG, "Login failed with result: "+loginResult);
 				return loginResult;
 			}
 			
 			if(sessionKey==null||sessionKey.equals("")){
-				return NOSESSIONKEY;
+				return RESULT.NOSESSIONKEY;
 			}
 			if(personaName==null||personaName.equals("")){
-				return NOUSERNAME;
+				return RESULT.NOUSERNAME;
 			}
 			if(personaId==null||sessionKey.equals("")){
-				return NOPERSONAID;
+				return RESULT.NOPERSONAID;
 			}
 			
 			
@@ -367,7 +367,7 @@ public class Client extends ERROR{
 					
 					if(responseString.contains("success\":0")){
 						//Anwser with no success;
-						return REQUESTFAILED;
+						return RESULT.REQUESTFAILED;
 					}
 					
 					JSONObject currentLoadout =null;
@@ -385,7 +385,7 @@ public class Client extends ERROR{
 						
 					} catch (JSONException e1) {
 						Logger.e(TAG, "Failed to parse loadout answer to JSON",e1);
-						return INTERNALSERVERERROR;
+						return RESULT.INTERNALSERVERERROR;
 					}
 					
 					
@@ -414,7 +414,7 @@ public class Client extends ERROR{
 						loadout.setLoadout(finishedLoadout);
 					} catch (JSONException e) {
 						Logger.e(TAG, "Failed to add parts to finished Loadout",e);
-						return this.FAILEDTOSAVE;
+						return RESULT.FAILEDTOSAVE;
 					}
 					
 						
@@ -425,12 +425,12 @@ public class Client extends ERROR{
 							Analyzer.analyzeLoadout(loadout);
 					}*/
 					lastFullLoadout=currentLoadout;
-					return OK;
+					return RESULT.OK;
 					
 				}
 				else{
 					Logger.w(TAG,"Loadout Request Failed with ReasonPhrase: "+response.getStatusLine().getReasonPhrase());
-					return REQUESTFAILED;
+					return RESULT.REQUESTFAILED;
 				}
 				
 			} catch (UnsupportedEncodingException e) {
@@ -443,7 +443,7 @@ public class Client extends ERROR{
 				Logger.e(TAG, "Failed to save Current Loadout",e);
 			}
 			
-			return REQUESTFAILED;
+			return RESULT.REQUESTFAILED;
 			
 		}
 	
@@ -451,19 +451,19 @@ public class Client extends ERROR{
 			
 			//Check login
 			int loginResult = checkLogin();
-			if(loginResult!=ERROR.OK){
+			if(loginResult!=RESULT.OK){
 				Logger.w(TAG, "Login failed with result: "+loginResult);
 				return loginResult;
 			}
 			
 			if(sessionKey==null||sessionKey.equals("")){
-				return NOSESSIONKEY;
+				return RESULT.NOSESSIONKEY;
 			}
 			if(personaName==null||personaName.equals("")){
-				return NOUSERNAME;
+				return RESULT.NOUSERNAME;
 			}
 			if(personaId==null||sessionKey.equals("")){
-				return NOPERSONAID;
+				return RESULT.NOPERSONAID;
 			}
 			
 
@@ -490,13 +490,13 @@ public class Client extends ERROR{
 				response = httpclient.execute(httppost);
 				
 			} catch (ClientProtocolException e) {
-				// TODO Auto-generated catch block
+
 				Logger.e(TAG,"Error while sending Loadout",e);
-				return REQUESTFAILED;
+				return RESULT.REQUESTFAILED;
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+			
 				Logger.e(TAG,"Error while sending Loadout",e);
-				return REQUESTFAILED;
+				return RESULT.REQUESTFAILED;
 			}
 			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -515,14 +515,14 @@ public class Client extends ERROR{
 				
 				if(!responseString.contains("success\":1")){
 					//Anwser with no success;
-					return REQUESTFAILED;
+					return RESULT.REQUESTFAILED;
 				}
 			}
 			else{
 				Logger.w(TAG,"Loadout Sending failed with ReasonPhrase: "+response.getStatusLine().getReasonPhrase());
-				return REQUESTFAILED;
+				return RESULT.REQUESTFAILED;
 			}
-			return OK;
+			return RESULT.OK;
 			
 		}
 

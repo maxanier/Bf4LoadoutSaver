@@ -17,13 +17,13 @@ import com.google.analytics.tracking.android.EasyTracker;
 import com.google.analytics.tracking.android.MapBuilder;
 import com.google.analytics.tracking.android.StandardExceptionParser;
 
+import de.maxgb.android.util.InfoBox;
 import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.io.Client;
 import de.maxgb.loadoutsaver.io.LoadoutManager;
 import de.maxgb.loadoutsaver.util.Constants;
-import de.maxgb.loadoutsaver.util.ERROR;
+import de.maxgb.loadoutsaver.util.RESULT;
 
-import de.maxgb.loadoutsaver.util.InfoBox;
 import de.maxgb.loadoutsaver.util.Loadout;
 
 import android.annotation.SuppressLint;
@@ -152,7 +152,8 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 			}
 		});
 		
-		InfoBox.showInstructionBox(this,InfoBox.Instruction.MAIN);
+		InfoBox.showInstructionBox(this.getSharedPreferences(Constants.PREF_NAME,0),this,Constants.INSTRUCTION_BETA);
+		InfoBox.showInstructionBox(this.getSharedPreferences(Constants.PREF_NAME,0),this,Constants.INSTRUCTION_OPTIONS);
 
 
 		if(loadoutManager.checkIfOldFileExists()){
@@ -359,7 +360,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		@Override
 		protected Integer doInBackground(Loadout... params) {
 			if(params==null||params.length!=1){
-				return ERROR.MISSINGPARAMETER;
+				return RESULT.MISSINGPARAMETER;
 			}
 			Client client=Client.getInstance(getSharedPreferences());
 			
@@ -381,17 +382,20 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 			}
 			Resources res = getResources();
 			
-			if(result==ERROR.OK){
+			if(result==RESULT.OK){
 				Logger.i(TAG, "Succesfully saved Loadout");
 				LoadoutManager.getInstance().addQuery();
 				updateList();
 				Toast.makeText(getApplicationContext(),res.getString(R.string.message_successfully_saved_loadout),Constants.TOAST_DURATION).show();
 			}
-			else if (result==ERROR.NOSESSIONKEY){
+			else if (result==RESULT.NOSESSIONKEY){
 				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\n Probably failed to login, please check your Login information");
 			}
-			else if(result==ERROR.TIMEOUT){
+			else if(result==RESULT.TIMEOUT){
 				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\n Server Timeout. Either the server or your internet is too slow");
+			}
+			else if(result==RESULT.INTERNALSERVERERROR){
+				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\n Battlelog probably changed something on their servers, please report this problem to get it fixed");
 			}
 			else{
 				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result);
@@ -415,13 +419,13 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		@Override
 		protected Integer doInBackground(Loadout... params) {
 			if(params==null||params.length==0){
-				return ERROR.MISSINGPARAMETER;
+				return RESULT.MISSINGPARAMETER;
 			}
 			Client client=Client.getInstance(getSharedPreferences());
 			
 			
 			int saveOldLoadoutResult=client.saveCurrentLoadout(new Loadout("Old Loadout",new JSONObject(),true,true,true));
-			if(saveOldLoadoutResult!=ERROR.OK){
+			if(saveOldLoadoutResult!=RESULT.OK){
 				Logger.w(TAG,"Failed to save old Loadout");
 				return saveOldLoadoutResult;
 			}
@@ -446,7 +450,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 				LoadoutManager loadoutManager=LoadoutManager.getInstance();
 				JSONObject full=client.getLastFullLoadout();
 				if(full==null){
-					return ERROR.NOFULLLOADOUT;
+					return RESULT.NOFULLLOADOUT;
 				}
 				
 				if(loadout.containsKits()){
@@ -464,7 +468,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 			}
 			catch(JSONException e){
 				Logger.e(TAG, "Error while putting Loadout together for sending",e);
-				return ERROR.PARSINGERROR;
+				return RESULT.PARSINGERROR;
 			}
 
 		}
@@ -474,7 +478,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 			Logger.i(TAG,"Sent Loadout with Result: "+result);
 			Resources res = getResources();
 			
-			if(result==ERROR.OK){
+			if(result==RESULT.OK){
 				Toast.makeText(getApplicationContext(),res.getString(R.string.message_successfully_sent_loadout),Constants.TOAST_DURATION).show();	
 			}
 			else{
