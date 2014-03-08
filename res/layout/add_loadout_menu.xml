@@ -14,6 +14,14 @@
         android:layout_marginBottom="4dp"
         android:hint="@string/loadoutNameHint" />
 
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        android:text="@string/loadout_parts_explanation"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
     <CheckBox
         android:id="@+id/dialog_box_weapons"
         android:layout_width="wrap_content"
