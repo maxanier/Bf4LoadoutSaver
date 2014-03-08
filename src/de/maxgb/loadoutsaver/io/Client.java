@@ -60,6 +60,7 @@ public class Client {
 	private int platform=1;
 	
 	private JSONObject lastFullLoadout;
+	private IConnectionListener conListener;
 	
 	
 	
@@ -131,6 +132,10 @@ public class Client {
 			String email=pref.getString(Constants.EMAIL_KEY,"");
 			String password=pref.getString(Constants.PASSWORD_KEY,"");
 			
+			if(email.equals("")||password.equals("")){
+				if(conListener!=null) conListener.failedToLogin("Login credentials missing");
+				return RESULT.LOGINCREDENTIALSMISSING;
+			}
 			Long tsLong = System.currentTimeMillis()/1000;
 			
 			Logger.i(TAG, "Loginvorgang gestartet");
@@ -240,6 +245,7 @@ public class Client {
 							Logger.i(TAG,"SessionKey: "+sessionKey);
 						}
 						else{
+							if(conListener!=null) conListener.failedToLogin("Login request failed");
 							return RESULT.NOSESSIONKEY;
 						}
 					}
@@ -258,6 +264,7 @@ public class Client {
 							
 						}
 						else{
+							if(conListener!=null) conListener.failedToLogin("Login request failed");
 							return RESULT.NOPERSONAID;
 						}
 					}
@@ -270,6 +277,7 @@ public class Client {
 							
 						}
 						else{
+							if(conListener!=null) conListener.failedToLogin("Login request failed");
 							return RESULT.NOUSERNAME;
 						}
 					}
@@ -283,10 +291,13 @@ public class Client {
 					Logger.i(TAG, "Login analysis complete: SessionKey: "+sessionKey+", PersonaName: "+personaName+", PersonaId: "+personaId+", Platform: "+platform);
 					
 					loggedInSince=System.currentTimeMillis();
+					
+					if(conListener!=null) conListener.loggedIn(personaName, Constants.getPlatformFromInt(platform));
 					return RESULT.OK;
 					
 				}
 				else{
+					if(conListener!=null) conListener.failedToLogin("Login request failed");
 					return RESULT.REQUESTFAILED;
 				}
 				
@@ -538,5 +549,11 @@ public class Client {
 
 			return lastFullLoadout;
 		}
+		
+		public void setConnectionListener(IConnectionListener l){
+			conListener=l;
+		}
+		
+
 	
 }
