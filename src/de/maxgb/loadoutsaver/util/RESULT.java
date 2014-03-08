@@ -5,7 +5,7 @@ package de.maxgb.loadoutsaver.util;
  * @author Max Becker
  *
  */
-public class ERROR {
+public class RESULT {
 	//Result constants
 	public final static int OK=0;
 	public final static int REQUESTFAILED=1;
