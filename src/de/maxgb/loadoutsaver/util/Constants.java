@@ -1,6 +1,8 @@
 package de.maxgb.loadoutsaver.util;
 
+import de.maxgb.loadoutsaver.R;
 import android.os.Environment;
+import de.maxgb.android.util.InfoBox.Instruction;
 
 public class Constants {
 	//Connection Parameter
@@ -47,6 +49,8 @@ public class Constants {
 	public static final String BJSON_PERSONANAME="personaName";
 	public static final String BJSON_PLATFORMINT="platformInt";
 	
-
+	//Instructions
+	public static final Instruction INSTRUCTION_OPTIONS=new Instruction("Loadout Saver",5,"<html><body>1. Enter your Battlog login information in the options menu, so the app can edit your loadout<br>2. Use the +-Button to save your currently equipped Loadout and choose a name and a type (Infantry/Vehicle/All) for it<br>3. Click on a Loadout to load it and watch it happen on Battlelog or in game<br>4. Long click on a Loadout to remove it.</body></html");
+	public static final Instruction INSTRUCTION_BETA=new Instruction("Loadout Saver",17,"<html><body><b>Important notice</b><br>I can´t confirm that this app works for console players.<br>If it does thats great, if not, please don´t rate this app bad, but report the problem, so I can make it work<br>Thanks");
 	
 }
