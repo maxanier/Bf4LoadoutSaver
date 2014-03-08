@@ -1,9 +1,13 @@
 package de.maxgb.loadoutsaver;
 
+import java.util.ArrayList;
+
 import com.google.analytics.tracking.android.EasyTracker;
 
 import de.maxgb.android.util.Logger;
+import de.maxgb.loadoutsaver.io.LoadoutManager;
 import de.maxgb.loadoutsaver.util.Constants;
+import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
@@ -98,6 +102,15 @@ public class OptionsActivity extends Activity {
 		i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"app@maxgb.de"});
 		i.putExtra(Intent.EXTRA_SUBJECT, "Feedback to Battlefield 4 Loadout Saver App "+version);
 		i.putExtra(Intent.EXTRA_TEXT   , "");
+		
+   		ArrayList<Uri> uris=new ArrayList<Uri>();
+   		if(Logger.getLogFile()!=null) uris.add(Uri.fromFile(Logger.getLogFile()));
+   		if(Logger.getOldLogFile()!=null) uris.add(Uri.fromFile(Logger.getOldLogFile()));
+   		if(LoadoutManager.getInstance().getLoadoutFileUri()!=null) uris.add(LoadoutManager.getInstance().getLoadoutFileUri());
+
+		i.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+		
+		
 		try {
 		    startActivity(Intent.createChooser(i, "Send mail..."));
 		} catch (android.content.ActivityNotFoundException ex) {

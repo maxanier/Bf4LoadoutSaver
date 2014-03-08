@@ -159,14 +159,24 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position,
 					long arg3) {
-				//final String item = (String) parent.getItemAtPosition(position);
 				Logger.i(TAG,"Activating Loadout at position: "+position);
 				sendLoadout(LoadoutManager.getInstance().getLoadout().get(position));
 				view.startAnimation(AnimationUtils.loadAnimation(context, R.anim.view_click));
 			}
 		});
+		//Show beta informations shortly after activity creation
+		final SharedPreferences pref = getSharedPreferences();
+		final Context con=this;
+		list.postDelayed(new Runnable(){
+
+			@Override
+			public void run() {
+				InfoBox.showInstructionBox(pref,con,Constants.INSTRUCTION_BETA);
+				
+			}
+			
+		}, 2000);
 		
-		InfoBox.showInstructionBox(this.getSharedPreferences(Constants.PREF_NAME,0),this,Constants.INSTRUCTION_BETA);
 		InfoBox.showInstructionBox(this.getSharedPreferences(Constants.PREF_NAME,0),this,Constants.INSTRUCTION_OPTIONS);
 
 
@@ -281,10 +291,12 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		               		mailIntent.putExtra(Intent.EXTRA_EMAIL  , new String[]{Constants.LOG_REPORT_EMAIL});
 		               		mailIntent.putExtra(Intent.EXTRA_SUBJECT, Constants.LOG_REPORT_SUBJECT+version);
 		               		mailIntent.putExtra(Intent.EXTRA_TEXT   , "Error: "+message);
+		               		
 		               		ArrayList<Uri> uris=new ArrayList<Uri>();
-		            		uris.add(Uri.fromFile(Logger.getLogFile()));
-		            	
-		            		uris.add(Uri.fromFile(Logger.getOldLogFile()));
+		               		if(Logger.getLogFile()!=null) uris.add(Uri.fromFile(Logger.getLogFile()));
+		               		if(Logger.getOldLogFile()!=null) uris.add(Uri.fromFile(Logger.getOldLogFile()));
+		               		if(LoadoutManager.getInstance().getLoadoutFileUri()!=null) uris.add(LoadoutManager.getInstance().getLoadoutFileUri());
+
 		            		mailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
 		               	    
 		               	  //Send, if possible
@@ -336,9 +348,12 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 	
 	public void sendLoadout(Loadout loadout){
 		if(!isOnline()){
+			Logger.i(TAG, "No internet connection");
 			Toast.makeText(getApplicationContext(),getResources().getString(R.string.message_no_connection),Constants.TOAST_DURATION).show();
 			return;
 		}
+		
+		Logger.i(TAG, "Sending loadout: "+loadout.toString());
 		if(sendingToast!=null) sendingToast.dismiss();
 		
 		sendingToast=new SuperActivityToast(this, SuperToast.Type.PROGRESS).create(this, "Sending Loadout", SuperToast.Duration.EXTRA_LONG);

@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.net.Uri;
+
 
 
 import de.maxgb.android.util.Logger;
@@ -230,5 +232,13 @@ public class LoadoutManager {
 			return true;
 		}
 		return false;
+	}
+	
+	public Uri getLoadoutFileUri(){
+		File f=getLoadoutFile();
+		if(f!=null){
+			return Uri.fromFile(f);
+		}
+		else return null;
 	}
 }

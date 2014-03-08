@@ -73,7 +73,8 @@ public class Loadout implements Cloneable {
 	@Override
 	@Deprecated
 	public String toString(){
-		return super.toString();
+		String s=" ";
+		return name+s+(weapons ? "1" : "0")+s+(kits?"1":"0")+s+(vehicles?"1":"0");
 	}
 	
 	@Override
