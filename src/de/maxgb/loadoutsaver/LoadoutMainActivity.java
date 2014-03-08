@@ -341,8 +341,10 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		}
 		if(sendingToast!=null) sendingToast.dismiss();
 		
-		sendingToast=SuperActivityToast.create(this, "Sending Loadout", SuperToast.Duration.EXTRA_LONG);
+		sendingToast=new SuperActivityToast(this, SuperToast.Type.PROGRESS).create(this, "Sending Loadout", SuperToast.Duration.EXTRA_LONG);
+		
 		sendingToast.setIndeterminate(true);
+
 		sendingToast.show();
 		
 		SendLoadoutTask task=new SendLoadoutTask();
@@ -515,7 +517,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 			Resources res = getResources();
 			
 			if(result==RESULT.OK){
-				Toast.makeText(getApplicationContext(),res.getString(R.string.message_successfully_sent_loadout),Constants.TOAST_DURATION).show();	
+				SuperToast.create(getApplication(), res.getString(R.string.message_successfully_sent_loadout), SuperToast.Duration.MEDIUM).show();
 			}
 			else if(result==RESULT.LOGINCREDENTIALSMISSING){
 				showErrorDialog(res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nPlease enter your battlelog login credentials in the options menu");
