@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
@@ -73,6 +75,9 @@ public class LoadoutNameDialog extends DialogFragment {
 
 					}
 				});
+		if(android.os.Build.VERSION.SDK_INT<VERSION_CODES.HONEYCOMB){
+			builder.setInverseBackgroundForced(true);
+		}
 		thisDialog=builder.create();
 		return thisDialog;
 	}
