@@ -20,4 +20,5 @@ public class RESULT {
 	public final static int NOFULLLOADOUT=10;
 	public final static int PARSINGERROR=11;
 	public final static int TIMEOUT=12;
+	public final static int LOGINCREDENTIALSMISSING=13;
 }
