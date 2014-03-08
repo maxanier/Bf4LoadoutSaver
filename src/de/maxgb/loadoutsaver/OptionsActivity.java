@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -81,10 +83,20 @@ public class OptionsActivity extends Activity {
 	}
 	public void feedback(View v){
 		Logger.i(TAG,"Feedback");
+		
+		PackageInfo pInfo;
+		String version = "X";
+		try {
+			pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+			version = pInfo.versionName;
+		} catch (NameNotFoundException e) {
+			e.printStackTrace();
+		}
+		
 		Intent i = new Intent(Intent.ACTION_SEND);
 		i.setType("message/rfc822");
 		i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"app@maxgb.de"});
-		i.putExtra(Intent.EXTRA_SUBJECT, "Feedback to Battlefield 4 Loadout Saver App");
+		i.putExtra(Intent.EXTRA_SUBJECT, "Feedback to Battlefield 4 Loadout Saver App "+version);
 		i.putExtra(Intent.EXTRA_TEXT   , "");
 		try {
 		    startActivity(Intent.createChooser(i, "Send mail..."));
