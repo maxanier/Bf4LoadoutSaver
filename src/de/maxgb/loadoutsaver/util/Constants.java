@@ -56,6 +56,14 @@ public class Constants {
 		switch(platform){
 			case 1:
 				return "PC";
+			case 2:
+				return "XBOX-360";
+			case 4:
+				return "PS3";
+			case 32:
+				return "PS4";
+			case 64:
+				return "XBOX-One";
 			default: 
 				return "unknown";
 				//TODO
