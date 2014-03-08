@@ -13,13 +13,18 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.github.johnpersano.supertoasts.SuperActivityToast;
+import com.github.johnpersano.supertoasts.SuperCardToast;
+import com.github.johnpersano.supertoasts.SuperToast;
 import com.google.analytics.tracking.android.EasyTracker;
 import com.google.analytics.tracking.android.MapBuilder;
 import com.google.analytics.tracking.android.StandardExceptionParser;
 
+
 import de.maxgb.android.util.InfoBox;
 import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.io.Client;
+import de.maxgb.loadoutsaver.io.IConnectionListener;
 import de.maxgb.loadoutsaver.io.LoadoutManager;
 import de.maxgb.loadoutsaver.util.Constants;
 import de.maxgb.loadoutsaver.util.RESULT;
@@ -27,6 +32,7 @@ import de.maxgb.loadoutsaver.util.RESULT;
 import de.maxgb.loadoutsaver.util.Loadout;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DialogFragment;
 import android.app.ProgressDialog;
@@ -37,6 +43,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -47,6 +54,8 @@ import android.os.PowerManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TableRow;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.util.Log;
 import android.view.View;
@@ -54,18 +63,21 @@ import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.view.animation.AnimationUtils;
 
-public class LoadoutMainActivity extends SherlockFragmentActivity implements LoadoutNameDialog.LoadoutNameDialogListener{
+public class LoadoutMainActivity extends SherlockFragmentActivity implements LoadoutNameDialog.LoadoutNameDialogListener, IConnectionListener{
 	
 	private ListView list;
 	private static final String TAG="MainActivity";
 	private ProgressDialog progressDialog;
 	private Context context;
+	private SuperActivityToast sendingToast;
+
 	
 	
 	  @Override
 	  public void onStart() {
 	    super.onStart();
 	    EasyTracker.getInstance(this).activityStart(this);  // Starting EasyTracker
+	    
 	  }
 
 	  @Override
@@ -104,6 +116,8 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		Logger.setDebugMode(true);//TODO Replace by user settings
 		
 		LoadoutManager loadoutManager =LoadoutManager.getInstance();
+		Client.getInstance(getSharedPreferences()).setConnectionListener(this);
+		
 		
 		
 		list= (ListView) findViewById(R.id.list);
@@ -235,6 +249,11 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		AlertDialog dialog = builder.create();
 		
 		dialog.show();
+		
+		
+		
+		
+		
 	}
 	
 	private void showErrorReportingDialog(String msg){
@@ -309,11 +328,22 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 
 	}
 	
+	private void reportToAnalytics(String category,String label ,String msg,long value){
+		EasyTracker tracker=EasyTracker.getInstance(this);
+		
+		tracker.send(MapBuilder.createEvent(category, label, msg,value ).build()); //TODO test if it works
+	}
+	
 	public void sendLoadout(Loadout loadout){
 		if(!isOnline()){
 			Toast.makeText(getApplicationContext(),getResources().getString(R.string.message_no_connection),Constants.TOAST_DURATION).show();
 			return;
 		}
+		if(sendingToast!=null) sendingToast.dismiss();
+		
+		sendingToast=SuperActivityToast.create(this, "Sending Loadout", SuperToast.Duration.EXTRA_LONG);
+		sendingToast.setIndeterminate(true);
+		sendingToast.show();
 		
 		SendLoadoutTask task=new SendLoadoutTask();
 		task.execute(loadout);
@@ -388,18 +418,23 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 				updateList();
 				Toast.makeText(getApplicationContext(),res.getString(R.string.message_successfully_saved_loadout),Constants.TOAST_DURATION).show();
 			}
+			else if(result==RESULT.LOGINCREDENTIALSMISSING){
+				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nPlease enter your battlelog login credentials in the options menu");
+			}
 			else if (result==RESULT.NOSESSIONKEY){
-				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\n Probably failed to login, please check your Login information");
+				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nProbably failed to login, please check your Login information");
 			}
 			else if(result==RESULT.TIMEOUT){
-				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\n Server Timeout. Either the server or your internet is too slow");
+				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nServer Timeout. Either the server or your internet is too slow.\nTry again later");
 			}
 			else if(result==RESULT.INTERNALSERVERERROR){
-				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\n Battlelog probably changed something on their servers, please report this problem to get it fixed");
+				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nBattlelog probably changed something on their servers, please report this problem to get it fixed");
 			}
 			else{
 				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result);
 			}
+			
+			reportToAnalytics("ui_action","action","save",result.longValue());
 		}
 		
 	}
@@ -476,14 +511,28 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		@Override
 		protected void onPostExecute(Integer result){
 			Logger.i(TAG,"Sent Loadout with Result: "+result);
+			if(sendingToast!=null) sendingToast.dismiss();
 			Resources res = getResources();
 			
 			if(result==RESULT.OK){
 				Toast.makeText(getApplicationContext(),res.getString(R.string.message_successfully_sent_loadout),Constants.TOAST_DURATION).show();	
 			}
+			else if(result==RESULT.LOGINCREDENTIALSMISSING){
+				showErrorDialog(res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nPlease enter your battlelog login credentials in the options menu");
+			}
+			else if (result==RESULT.NOSESSIONKEY){
+				showErrorDialog(res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nProbably failed to login, please check your Login information");
+			}
+			else if(result==RESULT.TIMEOUT){
+				showErrorDialog(res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nServer Timeout. Either the server or your internet is too slow\nTry again later");
+			}
+			else if(result==RESULT.INTERNALSERVERERROR){
+				showErrorDialog(res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nBattlelog probably changed something on their servers, please report this problem to get it fixed");
+			}
 			else{
 				showErrorDialog(res.getString(R.string.message_failed_to_send_loadout)+" "+result);
 			}
+			reportToAnalytics("ui_action","action","send",result.longValue());
 		}
 		
 	}
@@ -494,6 +543,46 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements Loa
 		if (netInfo != null && netInfo.isConnectedOrConnecting())
 			return true;
 		return false;
+		
+	}
+
+	@Override
+	public void loggedIn(final String persona, final String platform) {
+		final Activity context=this;
+		this.runOnUiThread(new Runnable(){
+			
+
+			@Override
+			public void run() {
+				SuperCardToast toast=SuperCardToast.create(context,"Logged in with soldier: "+persona+" on "+platform,SuperToast.Duration.LONG);
+				toast.setBackground(SuperToast.Background.GREEN);
+				toast.show();
+				
+			}
+			
+		});
+
+
+	}
+
+	@Override
+	public void failedToLogin(final String error) {
+		final Activity context=this;
+		this.runOnUiThread(new Runnable(){
+			
+
+			@Override
+			public void run() {
+				SuperCardToast toast=SuperCardToast.create(context,"Failed to login: "+error,SuperToast.Duration.LONG);
+				toast.setBackground(SuperToast.Background.RED);
+				toast.show();
+				
+			}
+			
+		});
+
+
+		
 	}
 
 }
