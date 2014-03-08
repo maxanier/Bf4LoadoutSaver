@@ -23,7 +23,8 @@
     <string name="instruction">Instruction</string>
     <string name="report">Report</string>
     <string name="loadout_weapons">Weapons</string>
-    <string name="loadout_kits">Kits</string>
+    <string name="loadout_kits">Kits (Weapons and equipment for each class)</string>
     <string name="loadout_vehicles">Vehicles</string>
+    <string name="loadout_parts_explanation">Choose the loadout-parts to store</string>
 
 </resources>
