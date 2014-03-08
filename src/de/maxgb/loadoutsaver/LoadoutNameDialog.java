@@ -42,12 +42,12 @@ public class LoadoutNameDialog extends DialogFragment {
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-		builder.setTitle(Messages.getString("LoadoutNameDialog.SetName")); //$NON-NLS-1$
+		builder.setTitle("New Loadout"); 
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 		builder.setView(inflater.inflate(R.layout.add_loadout_menu,null));
 		
 		
-		builder.setPositiveButton(Messages.getString("LoadoutNameDialog.Add"), //$NON-NLS-1$
+		builder.setPositiveButton("Add", 
 				new DialogInterface.OnClickListener() {
 
 					@Override
@@ -67,7 +67,7 @@ public class LoadoutNameDialog extends DialogFragment {
 						mListener.addCurrentLoadout(name,w,k,v);
 
 					}
-				}).setNegativeButton(Messages.getString("LoadoutNameDialog.Abort"), //$NON-NLS-1$
+				}).setNegativeButton("Abort", 
 				new DialogInterface.OnClickListener() {
 
 					@Override
