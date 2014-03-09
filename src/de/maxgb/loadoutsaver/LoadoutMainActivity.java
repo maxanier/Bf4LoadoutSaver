@@ -92,37 +92,43 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 						getApplicationContext(),
 						res.getString(R.string.message_successfully_saved_loadout),
 						Constants.TOAST_DURATION).show();
+				reportToAnalytics("action","save","success");
 			} else if (result == RESULT.LOGINCREDENTIALSMISSING) {
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_save_loadout)
 						+ " "
 						+ result
 						+ ".\nPlease enter your battlelog login credentials in the options menu");
+				reportToAnalytics("action","save","credentials_missing");
 			} else if (result == RESULT.NOSESSIONKEY) {
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_save_loadout)
 						+ " "
 						+ result
 						+ ".\nProbably failed to login, please check your Login information");
+				reportToAnalytics("action","save","credentials_wrong");
 			} else if (result == RESULT.TIMEOUT) {
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_save_loadout)
 						+ " "
 						+ result
 						+ ".\nServer Timeout. Either the server or your internet is too slow.\nTry again later");
+				reportToAnalytics("action","save","timeout");
 			} else if (result == RESULT.INTERNALSERVERERROR) {
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_save_loadout)
 						+ " "
 						+ result
 						+ ".\nBattlelog probably changed something on their servers, please report this problem to get it fixed");
+				reportToAnalytics("action","save","server_error");
 			} else {
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_save_loadout)
 						+ " " + result);
+				reportToAnalytics("action","save","other_error");
 			}
 
-			reportToAnalytics("ui_action", "action", "save", result.longValue());
+			
 		}
 
 		/**
@@ -228,36 +234,43 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 						.create(getApplication(),
 								res.getString(R.string.message_successfully_sent_loadout),
 								SuperToast.Duration.MEDIUM).show();
+				reportToAnalytics("action","send","success");
 			} else if (result == RESULT.LOGINCREDENTIALSMISSING) {
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_send_loadout)
 						+ " "
 						+ result
 						+ ".\nPlease enter your battlelog login credentials in the options menu");
+				reportToAnalytics("action","send","credentials_missing");
 			} else if (result == RESULT.NOSESSIONKEY) {
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_send_loadout)
 						+ " "
 						+ result
 						+ ".\nProbably failed to login, please check your Login information");
+				reportToAnalytics("action","send","credentials_wrong");
 			} else if (result == RESULT.TIMEOUT) {
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_send_loadout)
 						+ " "
 						+ result
 						+ ".\nServer Timeout. Either the server or your internet is too slow\nTry again later");
+				reportToAnalytics("action","send","timeout");
 			} else if (result == RESULT.INTERNALSERVERERROR) {
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_send_loadout)
 						+ " "
 						+ result
 						+ ".\nBattlelog probably changed something on their servers, please report this problem to get it fixed");
+				reportToAnalytics("action","send","server_error");
 			} else {
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_send_loadout)
 						+ " " + result);
+				reportToAnalytics("action","send","other_error");
 			}
-			reportToAnalytics("ui_action", "action", "send", result.longValue());
+			
+		
 		}
 
 	}
@@ -333,6 +346,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			}
 
 		});
+		reportToAnalytics("status","platform",platform);
 
 	}
 
@@ -424,7 +438,8 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 					"Old Loadouts deleted",
 					"Because of a bigger update behind the scenes all previous loadouts had to be deleted. Sorry.");
 		}
-
+		
+		
 	}
 
 	@Override
@@ -520,6 +535,13 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		EasyTracker tracker = EasyTracker.getInstance(this);
 
 		tracker.send(MapBuilder.createEvent(category, label, msg, value)
+				.build()); // TODO test if it works
+	}
+	
+	private void reportToAnalytics(String category, String label, String msg) {
+		EasyTracker tracker = EasyTracker.getInstance(this);
+
+		tracker.send(MapBuilder.createEvent(category, label, msg, null)
 				.build()); // TODO test if it works
 	}
 

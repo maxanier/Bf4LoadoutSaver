@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.analytics.tracking.android.EasyTracker;
+import com.google.analytics.tracking.android.MapBuilder;
 
 import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.io.LoadoutManager;
@@ -26,6 +27,7 @@ public class OptionsActivity extends Activity {
 	private TextView password;
 	private CheckBox analyse;
 	private CheckBox screenLock;
+	
 
 	public void abort(View v) {
 		Logger.i(TAG, "Abort");
@@ -44,8 +46,8 @@ public class OptionsActivity extends Activity {
 			e.printStackTrace();
 		}
 
-		Intent i = new Intent(Intent.ACTION_SEND);
-		i.setType("message/rfc822");
+		Intent i = new Intent(Intent.ACTION_SEND_MULTIPLE);
+		i.setType("text/plain");
 		i.putExtra(Intent.EXTRA_EMAIL, new String[] { "app@maxgb.de" });
 		i.putExtra(Intent.EXTRA_SUBJECT,
 				"Feedback to Battlefield 4 Loadout Saver App " + version);
@@ -107,8 +109,21 @@ public class OptionsActivity extends Activity {
 	}
 
 	public void save(View v) {
+		
 		Logger.i(TAG, "Saving");
 		SharedPreferences prefs = getSharedPreferences(Constants.PREF_NAME, 0);
+		
+		if(!email.getText().toString().trim().equals("")&&!password.getText().toString().equals("")){
+			if(!email.getText().toString().trim().equals(prefs.getString(Constants.EMAIL_KEY,""))||!password.getText().toString().equals(prefs.getString(Constants.PASSWORD_KEY, ""))){
+				if(prefs.getString(Constants.EMAIL_KEY, "asdf").equals("asdf")&&prefs.getString(Constants.PASSWORD_KEY, "asdf").equals("asdf")){
+					reportToAnalytics("status","credentials","first_entered");
+				}
+				else{
+					reportToAnalytics("status","credentials","changed");
+				}
+			}
+		}
+		
 		SharedPreferences.Editor editor = prefs.edit();
 
 		editor.putString(Constants.EMAIL_KEY, email.getText().toString().trim());
@@ -119,5 +134,12 @@ public class OptionsActivity extends Activity {
 		editor.commit();
 		finish();
 
+	}
+	
+	private void reportToAnalytics(String category, String label, String msg) {
+		EasyTracker tracker = EasyTracker.getInstance(this);
+
+		tracker.send(MapBuilder.createEvent(category, label, msg, null)
+				.build()); // TODO test if it works
 	}
 }
