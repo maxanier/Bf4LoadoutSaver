@@ -333,22 +333,27 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 
 	@Override
 	public void loggedIn(final String persona, final String platform) {
-		if(activity!=null){
-			final Activity context = activity;
-			this.runOnUiThread(new Runnable() {
-	
-				@Override
-				public void run() {
-					
-					SuperCardToast toast = SuperCardToast.create(context,
-							"Logged in with soldier: " + persona + " on "
-									+ platform, SuperToast.Duration.LONG);
-					toast.setBackground(SuperToast.Background.GREEN);
-					toast.show();
-	
-				}
-	
-			});
+		try {
+			if(activity!=null){
+				final Activity context = activity;
+				this.runOnUiThread(new Runnable() {
+
+					@Override
+					public void run() {
+						
+						SuperCardToast toast = SuperCardToast.create(context,
+								"Logged in with soldier: " + persona + " on "
+										+ platform, SuperToast.Duration.LONG);
+						toast.setBackground(SuperToast.Background.GREEN);
+						toast.show();
+
+					}
+
+				});
+			}
+		} catch (Exception e) {
+			Logger.e(TAG, "Error while showing logged in Toast",e);
+			reportError(e);
 		}
 		reportToAnalytics("status","platform",platform);
 
