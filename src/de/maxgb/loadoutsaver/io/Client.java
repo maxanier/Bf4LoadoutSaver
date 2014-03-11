@@ -268,6 +268,9 @@ public class Client {
 								index + 10, index + 11));
 						Logger.i(TAG, "PlatformId: " + platform);
 					}
+					else{
+						return RESULT.NOPLATFORMID;
+					}
 				}
 				Logger.i(TAG, "Login analysis complete: SessionKey: "
 						+ sessionKey + ", PersonaName: " + personaName
