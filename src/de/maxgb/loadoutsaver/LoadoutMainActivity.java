@@ -280,6 +280,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 	private ProgressDialog progressDialog;
 
 	private Context context;
+	private Activity activity;
 
 	private SuperActivityToast sendingToast;
 
@@ -332,20 +333,23 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 
 	@Override
 	public void loggedIn(final String persona, final String platform) {
-		final Activity context = this;
-		this.runOnUiThread(new Runnable() {
-
-			@Override
-			public void run() {
-				SuperCardToast toast = SuperCardToast.create(context,
-						"Logged in with soldier: " + persona + " on "
-								+ platform, SuperToast.Duration.LONG);
-				toast.setBackground(SuperToast.Background.GREEN);
-				toast.show();
-
-			}
-
-		});
+		if(activity!=null){
+			final Activity context = activity;
+			this.runOnUiThread(new Runnable() {
+	
+				@Override
+				public void run() {
+					
+					SuperCardToast toast = SuperCardToast.create(context,
+							"Logged in with soldier: " + persona + " on "
+									+ platform, SuperToast.Duration.LONG);
+					toast.setBackground(SuperToast.Background.GREEN);
+					toast.show();
+	
+				}
+	
+			});
+		}
 		reportToAnalytics("status","platform",platform);
 
 	}
@@ -362,6 +366,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 
 		// Save context for ProgressDialog
 		context = this;
+		activity=this;
 		Logger.init(Constants.DIRECTORY);
 		Logger.setDebugMode(true);// TODO Replace by user settings
 
