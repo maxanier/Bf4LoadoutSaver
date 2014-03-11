@@ -98,7 +98,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 						.getString(R.string.message_failed_to_save_loadout)
 						+ " "
 						+ result
-						+ ".\nPlease enter your battlelog login credentials in the options menu");
+						+ ".\nPlease enter your battlelog login credentials in the options menu",false);
 				reportToAnalytics("action","save","credentials_missing");
 			} else if (result == RESULT.NOSESSIONKEY) {
 				showErrorDialog(res
@@ -240,7 +240,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 						.getString(R.string.message_failed_to_send_loadout)
 						+ " "
 						+ result
-						+ ".\nPlease enter your battlelog login credentials in the options menu");
+						+ ".\nPlease enter your battlelog login credentials in the options menu",false);
 				reportToAnalytics("action","send","credentials_missing");
 			} else if (result == RESULT.NOSESSIONKEY) {
 				showErrorDialog(res
@@ -580,7 +580,12 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		task.execute(loadout);
 	}
 
-	private void showErrorDialog(String msg) {
+	/**
+	 * Shows a Error dialog with the given message and offers if report is true a report button
+	 * @param msg
+	 * @param report whether to show a report button or not
+	 */
+	private void showErrorDialog(String msg, boolean report) {
 
 		// 1. Instantiate an AlertDialog.Builder with its constructor
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -589,13 +594,6 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		// characteristics
 		builder.setMessage(message)
 				.setTitle(R.string.error)
-				.setPositiveButton(R.string.report,
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int id) {
-								showErrorReportingDialog(message);
-							}
-						})
 				.setNegativeButton(R.string.ok,
 						new DialogInterface.OnClickListener() {
 
@@ -606,11 +604,28 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 							}
 						});
 
+		if(report){
+			builder.setPositiveButton(R.string.report,
+					new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int id) {
+					showErrorReportingDialog(message);
+				}
+			});
+		}
 		// 3. Get the AlertDialog from create()
 		AlertDialog dialog = builder.create();
 
 		dialog.show();
 
+	}
+	
+	/**
+	 * Shows a Error dialog with the given message and with a report button
+	 * @param msg
+	 */
+	private void showErrorDialog(String msg){
+		showErrorDialog(msg,true);
 	}
 
 	private void showErrorReportingDialog(String msg) {
