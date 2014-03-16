@@ -263,9 +263,11 @@ public class Client {
 				}
 				if (platform == 0) {
 					index = responseString.indexOf("platform");
+					
 					if (index != -1) {
+						int index2=responseString.indexOf(',',index);
 						platform = Integer.parseInt(responseString.substring(
-								index + 10, index + 11));
+								index + 10, index2));
 						Logger.i(TAG, "PlatformId: " + platform);
 					}
 					else{
