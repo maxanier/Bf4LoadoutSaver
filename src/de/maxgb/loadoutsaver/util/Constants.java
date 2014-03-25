@@ -51,12 +51,12 @@ public class Constants {
 	// Instructions
 	public static final Instruction INSTRUCTION_OPTIONS = new Instruction(
 			"Loadout Saver",
-			17,
-			"<html><body>1. Enter your Battlog login information in the options menu, so the app can edit your loadout<br>2. Use the +-Button to save your currently equipped Loadout and choose a name  for it and select which parts of the Loadout should be saved (when sending a Loadout the missing pieces are supplemented with the corresponding pieces of your current loadout)<br>3. Click on a Loadout to load it and watch it happen on Battlelog or in game<br>4. Long click on a Loadout to remove it.</body></html");
+			22,
+			"<html><body>1. Enter your Battlog login information in the options menu, so the app can edit your loadout<br>2. Use the +-Button to save your currently equipped Loadout and choose a name  for it and select which parts of the Loadout should be saved (when sending a Loadout the missing pieces are supplemented with the corresponding pieces of your current loadout)<br>3. Click on a Loadout to load it and watch it happen on Battlelog or in game<br>4. Long click on a Loadout to remove it.<br><b>Important: You probably need to be playing BF4, when trying to send or save a loadout!</b><br>(If you own BF4 only on one platform it may work even if you are not playing)</body></html");
 	public static final Instruction INSTRUCTION_BETA = new Instruction(
 			"Loadout Saver",
 			17,
-			"<html><body><b>Important notice</b><br>I can´t confirm that this app works for console players.<br>If it does thats great, if not, please don´t rate this app bad, but report the problem, so I can make it work<br>Thanks");
+			"<html><body><b>Important notice</b><br>I can´t confirm that this app works for console players.<br><b>Important: You probably need to be playing BF4, when trying to send or save a loadout!</b><br>If it does thats great, if not, please don´t rate this app bad, but report the problem, so I can make it work<br>Thanks");
 
 	public static String getPlatformFromInt(int platform) {
 		switch (platform) {

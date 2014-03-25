@@ -17,6 +17,7 @@ public class Loadout implements Cloneable {
 	private boolean weapons;
 	private boolean kits;
 	private boolean vehicles;
+	private int color;
 
 	/**
 	 * 
@@ -30,19 +31,21 @@ public class Loadout implements Cloneable {
 	 *            if kits
 	 * @param vehicles
 	 *            if vehicles
+	 * @param color Color for displaying purpose
 	 */
 	public Loadout(String name, JSONObject loadout, boolean weapons,
-			boolean kits, boolean vehicles) {
+			boolean kits, boolean vehicles,int color) {
 		this.name = name;
 		this.loadout = loadout;
 		this.weapons = weapons;
 		this.kits = kits;
 		this.vehicles = vehicles;
+		this.color=color;
 	}
 
 	@Override
 	public Loadout clone() {
-		return new Loadout(name, loadout, weapons, kits, vehicles);
+		return new Loadout(name, loadout, weapons, kits, vehicles,color);
 	}
 
 	public boolean containsKits() {
@@ -90,6 +93,10 @@ public class Loadout implements Cloneable {
 	public String getName() {
 		return name;
 	}
+	
+	public int getColor(){
+		return color;
+	}
 
 	public void setLoadout(JSONObject loadout) {
 		this.loadout = loadout;
@@ -112,7 +119,7 @@ public class Loadout implements Cloneable {
 	 */
 	public String toString(String s) {
 		return name + s + (weapons ? "1" : "0") + s + (kits ? "1" : "0") + s
-				+ (vehicles ? "1" : "0") + s + loadout.toString();
+				+ (vehicles ? "1" : "0") + s + loadout.toString()+ s+color;
 	}
 
 }

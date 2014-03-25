@@ -43,4 +43,17 @@
         android:checked="true"
         android:text="@string/loadout_vehicles" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:text="@string/pick_color" />
+
+    <afzkl.development.colorpickerview.view.ColorPanelView
+        android:id="@+id/dialog_view_color"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginBottom="5dp"
+        />
+
 </LinearLayout>

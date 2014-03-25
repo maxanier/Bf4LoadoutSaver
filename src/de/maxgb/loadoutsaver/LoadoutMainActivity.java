@@ -16,6 +16,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -121,6 +122,10 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 						+ result
 						+ ".\nBattlelog probably changed something on their servers, please report this problem to get it fixed");
 				reportToAnalytics("action","save","server_error");
+			}
+			else if(result == RESULT.NOPLATFORMID){
+				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nYou may need to be playing BF4 when trying to save a loadout");
+				reportToAnalytics("action","save","no_platformid");
 			} else {
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_save_loadout)
@@ -173,7 +178,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			Client client = Client.getInstance(getSharedPreferences());
 
 			int saveOldLoadoutResult = client.saveCurrentLoadout(new Loadout(
-					"Old Loadout", new JSONObject(), true, true, true));
+					"Old Loadout", new JSONObject(), true, true, true,Color.BLACK));
 			if (saveOldLoadoutResult != RESULT.OK) {
 				Logger.w(TAG, "Failed to save old Loadout");
 				return saveOldLoadoutResult;
@@ -263,6 +268,10 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 						+ result
 						+ ".\nBattlelog probably changed something on their servers, please report this problem to get it fixed");
 				reportToAnalytics("action","send","server_error");
+			}
+			else if(result == RESULT.NOPLATFORMID){
+				showErrorDialog(res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nYou may need to be playing BF4 when trying to send a loadout");
+				reportToAnalytics("action","send","no_platformid");
 			} else {
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_send_loadout)
@@ -285,7 +294,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 	private SuperActivityToast sendingToast;
 
 	@Override
-	public void addCurrentLoadout(String name, boolean w, boolean k, boolean v) {
+	public void addCurrentLoadout(String name, boolean w, boolean k, boolean v,int color) {
 
 		if (!isOnline()) {
 			Toast.makeText(getApplicationContext(),
@@ -293,7 +302,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 					Constants.TOAST_DURATION).show();
 			return;
 		}
-		Loadout loadout = new Loadout(name, new JSONObject(), w, k, v);
+		Loadout loadout = new Loadout(name, new JSONObject(), w, k, v,color);
 
 		Logger.i(TAG, "User wants new Loadout: " + loadout.toString(" "));
 		SaveLoadoutTask task = new SaveLoadoutTask();

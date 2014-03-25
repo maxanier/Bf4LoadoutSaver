@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.graphics.Color;
 import android.net.Uri;
 import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.util.Constants;
@@ -209,16 +210,29 @@ public class LoadoutManager {
 
 		try {
 			String[] splitted = s.split(Constants.LOADOUT_SEPERATOR);
-			if (splitted.length == 5) {
+			if (splitted.length == 5||splitted.length == 6) {
 				String name = splitted[0];
 				boolean weapons = splitted[1].equals("1");
 				boolean kits = splitted[2].equals("1");
 				boolean vehicles = splitted[3].equals("1");
+				
+
+				
 
 				JSONObject loadout = new JSONObject(splitted[4]);
-				return new Loadout(name, loadout, weapons, kits, vehicles);
+				
+				int color=Color.BLACK;
+				if(splitted.length==6){
+					try {
+						color=Integer.parseInt(splitted[5]);
+					} catch (NumberFormatException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				return new Loadout(name, loadout, weapons, kits, vehicles,color);
 			} else {
-				Logger.e(TAG, "Loadoutline did not contain 5 parts");
+				Logger.e(TAG, "Loadoutline did not contain 5/6 parts");
 			}
 		} catch (JSONException e) {
 			Logger.e(TAG, "Failed to parse saved json loadout string to json");

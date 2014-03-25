@@ -29,5 +29,6 @@
     <color name="green">#00FF00</color>
     <color name="red">#FF0000</color>
     <string name="status_not_logged_in">Not logged in yet</string>
+    <string name="pick_color">Pick a color</string>
 
 </resources>
