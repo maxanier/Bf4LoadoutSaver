@@ -42,7 +42,8 @@
 	        android:id="@+id/checkBox_analyse"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
-	        android:text="@string/option_analyse" />
+	        android:text="@string/option_analyse"
+	        android:visibility="invisible" />
 	    
 	    <CheckBox
 	        android:id="@+id/checkBox_screenlock"
