@@ -57,6 +57,7 @@ public class Constants {
 			"Loadout Saver",
 			17,
 			"<html><body><b>Important notice</b><br>I can´t confirm that this app works for console players.<br><b>Important: You probably need to be playing BF4, when trying to send or save a loadout!</b><br>If it does thats great, if not, please don´t rate this app bad, but report the problem, so I can make it work<br>Thanks");
+	public static boolean GA_DRY_RUN=false;
 
 	public static String getPlatformFromInt(int platform) {
 		switch (platform) {
