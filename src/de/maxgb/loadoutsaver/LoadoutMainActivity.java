@@ -37,6 +37,7 @@ import com.github.johnpersano.supertoasts.SuperActivityToast;
 import com.github.johnpersano.supertoasts.SuperCardToast;
 import com.github.johnpersano.supertoasts.SuperToast;
 import com.google.analytics.tracking.android.EasyTracker;
+import com.google.analytics.tracking.android.GoogleAnalytics;
 import com.google.analytics.tracking.android.MapBuilder;
 import com.google.analytics.tracking.android.StandardExceptionParser;
 
@@ -122,6 +123,10 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 						+ result
 						+ ".\nBattlelog probably changed something on their servers, please report this problem to get it fixed");
 				reportToAnalytics("action","save","server_error");
+			}
+			else if(result==RESULT.NOSTATS){
+				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nYour soldier ("+Client.getInstance(getSharedPreferences()).getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
+				reportToAnalytics("action","save","nostats");
 			}
 			else if(result == RESULT.NOPLATFORMID){
 				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nYou may need to be playing BF4 when trying to save a loadout");
@@ -382,7 +387,12 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		context = this;
 		activity=this;
 		Logger.init(Constants.DIRECTORY);
-		Logger.setDebugMode(true);// TODO Replace by user settings
+		Logger.setDebugMode(true);
+		boolean inEmulator=Logger.inEmulator();
+		if(inEmulator){
+			Logger.setDebugMode(false);//Disable debug mode if in emulator
+			Constants.GA_DRY_RUN=true;//Stop GA logging
+		}
 
 		LoadoutManager loadoutManager = LoadoutManager.getInstance();
 		Client.getInstance(getSharedPreferences()).setConnectionListener(this);
@@ -508,6 +518,9 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 	@Override
 	public void onStart() {
 		super.onStart();
+		GoogleAnalytics mGA = GoogleAnalytics.getInstance(this);
+
+		mGA.setDryRun(Constants.GA_DRY_RUN);
 		EasyTracker.getInstance(this).activityStart(this); // Starting
 															// EasyTracker
 
@@ -554,14 +567,14 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		EasyTracker tracker = EasyTracker.getInstance(this);
 
 		tracker.send(MapBuilder.createEvent(category, label, msg, value)
-				.build()); // TODO test if it works
+				.build()); 
 	}
 	
 	private void reportToAnalytics(String category, String label, String msg) {
 		EasyTracker tracker = EasyTracker.getInstance(this);
 
 		tracker.send(MapBuilder.createEvent(category, label, msg, null)
-				.build()); // TODO test if it works
+				.build()); 
 	}
 
 	public void sendLoadout(Loadout loadout) {
@@ -597,7 +610,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 	private void showErrorDialog(String msg, boolean report) {
 
 		// 1. Instantiate an AlertDialog.Builder with its constructor
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		AlertDialog.Builder builder = new AlertDialog.Builder(LoadoutMainActivity.this);
 		final String message = msg;
 		// 2. Chain together various setter methods to set the dialog
 		// characteristics
@@ -693,11 +706,13 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 								try {
 									startActivity(Intent.createChooser(
 											mailIntent, "Send mail..."));
+									reportToAnalytics("action","report","send");
 								} catch (android.content.ActivityNotFoundException ex) {
 									Toast.makeText(
 											getApplicationContext(),
 											"There are no email clients installed.",
 											Toast.LENGTH_SHORT).show();
+									reportToAnalytics("action","report","no_mail");
 								}
 							}
 						})
@@ -707,7 +722,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 							@Override
 							public void onClick(DialogInterface dialog,
 									int which) {
-								// TODO Auto-generated method stub
+								reportToAnalytics("action","report","abort");
 
 							}
 						});
