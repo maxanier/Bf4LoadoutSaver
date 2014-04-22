@@ -366,8 +366,13 @@ public class Client {
 						+ debugShortResponse); // TODO Remove if fully working
 
 				if (responseString.contains("success\":0")) {
-					// Anwser with no success;
+					// Answer with no success;
 					return RESULT.REQUESTFAILED;
+				}
+				
+				if(responseString.contains("\"error\":\"nostats\"")){
+					//Soldier has no stats or does not exist
+					return RESULT.NOSTATS;
 				}
 
 				JSONObject currentLoadout = null;
@@ -532,9 +537,16 @@ public class Client {
 		conListener = l;
 	}
 
-	// Public methods
+	
 	public void setPreferences(SharedPreferences pref) {
 		this.pref = pref;
+	}
+	
+	public String getPersonaName(){
+		if(personaName==null||personaName.equals("")){
+			return "Unknown";
+		}
+		return personaName;
 	}
 
 }
