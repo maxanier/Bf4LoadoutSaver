@@ -755,22 +755,25 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 
 			@Override
 			public void run() {
+				AlertDialog d=null;
 				AlertDialog.Builder adb = new AlertDialog.Builder(activity);
 				CharSequence items[] = new CharSequence[personas.size()];
 				for(int i=0;i<personas.size();i++){
 					items[i]=personas.get(i).personaName+" on "+Constants.getPlatformFromInt(personas.get(i).platform);
 				}
 				
-				adb.setSingleChoiceItems(items, 0, new OnClickListener() {
+				adb.setSingleChoiceItems(items, -1, new OnClickListener() {
 
 				        @Override
 				        public void onClick(DialogInterface d, int n) {
 				            listener.choosenPersona(personas.get(n));
+				            d.dismiss();
 				        }
 
 				});
 				adb.setTitle("Choose your soldier");
-				adb.show();
+				d=adb.show();
+				
 				
 			}
 			
