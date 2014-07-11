@@ -25,11 +25,12 @@ import org.json.JSONObject;
 
 import android.content.SharedPreferences;
 import de.maxgb.android.util.Logger;
+import de.maxgb.loadoutsaver.LoadoutMainActivity.IPersonaListener;
 import de.maxgb.loadoutsaver.util.Constants;
 import de.maxgb.loadoutsaver.util.Loadout;
 import de.maxgb.loadoutsaver.util.RESULT;
 
-public class Client {
+public class Client implements IPersonaListener {
 	private final String TAG = "Client";
 	private static Client instance;
 
@@ -48,10 +49,8 @@ public class Client {
 	private boolean loggedIn = false;
 	private long loggedInSince = 0;
 	private String sessionKey = "";
-	private String personaName = "";
-	private String personaId = "";
+	private Persona persona;
 
-	private int platform = 1;
 	private JSONObject lastFullLoadout;
 
 	private IConnectionListener conListener;
@@ -70,7 +69,7 @@ public class Client {
 
 	private int checkLogin() {
 		if (!isLoggedIn() == false
-				|| System.currentTimeMillis() - getLoggedInSince() > Constants.LOGIN_TIMEOUT) {
+				|| System.currentTimeMillis() - getLoggedInSince() > Constants.LOGIN_TIMEOUT || persona==null) {
 			return login();
 		}
 		return RESULT.OK;
@@ -144,10 +143,9 @@ public class Client {
 				// Read out
 				// values------------------------------------------------------------------
 				sessionKey = null;
-				platform = 0;
-				personaName = null;
-				personaId = null;
-
+				persona=null;
+				ArrayList<Persona> personas = new ArrayList<Persona>();
+				
 				try {
 					JSONObject responseJson = new JSONObject(responseString);
 					JSONObject data = responseJson.getJSONObject("data");
@@ -155,136 +153,69 @@ public class Client {
 					if (data != null) {
 
 						try {
-							sessionKey = data.getString("sessionKey");
+							sessionKey = data.getString(Constants.BJSON_SESSIONKEY);
 						} catch (JSONException e) {
+							
 
 						}
-
-						JSONObject activePersona = null;
-						try {
-							activePersona = data
-									.getJSONObject("activePersonas")
-									.getJSONObject("2");
-						} catch (JSONException e1) {
-
-						}
-
-						if (activePersona != null) {
-
-							try {
-								platform = activePersona.getInt("platform");
-							} catch (JSONException e) {
-
-							}
-
-							JSONObject persona = null;
-							try {
-								persona = activePersona
-										.getJSONObject("persona");
-							} catch (JSONException e) {
-
-							}
-
-							if (persona != null) {
-								try {
-									personaName = persona
-											.getString("personaName");
-									personaId = persona.getString("personaId");
-								} catch (JSONException e) {
-
+						
+						
+						JSONArray ps=data.getJSONArray("personas");
+						for(int i=0;i< ps.length();i++){
+							JSONObject p=ps.getJSONObject(i);
+							
+							
+							JSONObject games=p.getJSONObject(Constants.BJSON_GAMES);
+							for(int j=0;j<games.names().length();j++){
+								Logger.i(TAG, "Owns game "+games.getString(games.names().getString(j)) +" on "+games.names().getString(j));
+								if(!games.getString(games.names().getString(j)).equals("0")){
+									Persona pers=new Persona();
+									pers.personaName=p.getString(Constants.BJSON_PERSONANAME);
+									pers.personaId=p.getString(Constants.BJSON_PERSONAID);
+									pers.platform=Integer.parseInt(games.names().getString(j));
+									personas.add(pers);
 								}
-							} else {
-								Logger.w(TAG, "persona not found");
 							}
-						} else {
-							Logger.w(TAG, "activePersona not found");
+							
+							
 						}
 
+						
 					} else {
 						Logger.w(TAG, "DataObject in response json is null");
 					}
 
 				} catch (JSONException e) {
-					Logger.w(TAG, "Failed to parse response to JSON");
+					Logger.e(TAG, "Failed to parse response to JSON",e);
 				}
 
-				Logger.i(TAG,
-						"After JSON analysis the following information was found: ID: "
-								+ personaId + ", Name: " + (personaName)
-								+ ", Key: " + sessionKey + ", Platform: "
-								+ platform);
 
-				// In case something was not found -> String analysis
-				int index;
-				if (sessionKey == null) {
-					index = responseString.indexOf("sessionKey");
-					if (index != -1) {
-						sessionKey = responseString.substring(index + 13,
-								index + 13 + 32);
-						Logger.i(TAG, "SessionKey: " + sessionKey);
-					} else {
-						if (conListener != null)
-							conListener.failedToLogin("Login request failed");
-						return RESULT.NOSESSIONKEY;
-					}
+				if(sessionKey==null){
+					return RESULT.NOSESSIONKEY;
 				}
 
-				if (personaId == null) {
-					index = responseString.indexOf("personaId");
-					if (index != -1) {
-						String sub = responseString.substring(index + 12);
-						index = sub.indexOf('"');
-
-						if (index == -1) {
-							return RESULT.NOPERSONAID;
-						}
-
-						personaId = sub.substring(0, index);
-
-					} else {
-						if (conListener != null)
-							conListener.failedToLogin("Login request failed");
-						return RESULT.NOPERSONAID;
-					}
-				}
-
-				if (personaName == null) {
-					index = responseString.indexOf("username");
-					if (index != -1) {
-						String subString = responseString.substring(index + 11);
-						personaName = subString.substring(0,
-								subString.indexOf('"'));
-
-					} else {
-						if (conListener != null)
-							conListener.failedToLogin("Login request failed");
-						return RESULT.NOUSERNAME;
-					}
-				}
-				if (platform == 0) {
-					index = responseString.indexOf("platform");
-					
-					if (index != -1) {
-						int index2=responseString.indexOf(',',index);
-						platform = Integer.parseInt(responseString.substring(
-								index + 10, index2));
-						Logger.i(TAG, "PlatformId: " + platform);
-					}
-					else{
-						return RESULT.NOPLATFORMID;
-					}
-				}
 				Logger.i(TAG, "Login analysis complete: SessionKey: "
-						+ sessionKey + ", PersonaName: " + personaName
-						+ ", PersonaId: " + personaId + ", Platform: "
-						+ platform);
-
+						+ sessionKey+". Found "+personas.size()+" personas: "+personas.toString());
+				
+				if(personas.size()==0){
+					return RESULT.NOPERSONA;
+				}
 				loggedInSince = System.currentTimeMillis();
 
-				if (conListener != null)
-					conListener.loggedIn(personaName,
-							Constants.getPlatformFromInt(platform));
-				return RESULT.OK;
+				if(personas.size()==1){
+					persona=personas.get(0);
+					if (conListener != null)
+						conListener.loggedIn(persona);
+					Logger.i(TAG, "Only one persona, so skipping choosing part");
+					return RESULT.OK;
+				}
+				else{
+					Logger.i(TAG, "Multiple personas, asking user to choose");
+					conListener.choosePersona(personas, this);
+					return RESULT.WAITFORPERSONA;
+				}
+
+				
 
 			} else {
 				if (conListener != null)
@@ -292,16 +223,11 @@ public class Client {
 				return RESULT.REQUESTFAILED;
 			}
 
-		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return RESULT.REQUESTFAILED;
 		} catch (SocketTimeoutException e) {
 			Logger.w(TAG, "Timeout during login");
 			return RESULT.TIMEOUT;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Logger.e(TAG, "IOException during login",e);
 			return RESULT.REQUESTFAILED;
 		}
 
@@ -321,18 +247,19 @@ public class Client {
 		// Check login
 		int loginResult = checkLogin();
 		if (loginResult != RESULT.OK) {
-			Logger.w(TAG, "Login failed with result: " + loginResult);
-			return loginResult;
+			if(loginResult==RESULT.WAITFORPERSONA){
+				while(persona==null){
+					Thread.yield();
+				}
+			}
+			else{
+				Logger.w(TAG, "Login failed with result: " + loginResult);
+				return loginResult;
+			}
 		}
 
 		if (sessionKey == null || sessionKey.equals("")) {
 			return RESULT.NOSESSIONKEY;
-		}
-		if (personaName == null || personaName.equals("")) {
-			return RESULT.NOUSERNAME;
-		}
-		if (personaId == null || sessionKey.equals("")) {
-			return RESULT.NOPERSONAID;
 		}
 
 		Long tsLong = System.currentTimeMillis() / 1000;
@@ -342,9 +269,9 @@ public class Client {
 			HttpPost httppost = new HttpPost(Constants.GETLOADOUT_URL);
 
 			List<NameValuePair> paare = new ArrayList<NameValuePair>(4); // Post-Parameter
-			paare.add(new BasicNameValuePair("personaId", personaId));
-			paare.add(new BasicNameValuePair("personaName", personaName));
-			paare.add(new BasicNameValuePair("platformInt", "" + platform));
+			paare.add(new BasicNameValuePair("personaId", persona.personaId));
+			paare.add(new BasicNameValuePair("personaName", persona.personaName));
+			paare.add(new BasicNameValuePair("platformInt", "" + persona.platform));
 			paare.add(new BasicNameValuePair("timestamp", tsLong.toString()));
 
 			httppost.setEntity(new UrlEncodedFormEntity(paare));
@@ -462,19 +389,21 @@ public class Client {
 		// Check login
 		int loginResult = checkLogin();
 		if (loginResult != RESULT.OK) {
-			Logger.w(TAG, "Login failed with result: " + loginResult);
-			return loginResult;
+			if(loginResult==RESULT.WAITFORPERSONA){
+				while(persona==null){
+					Thread.yield();
+				}
+			}
+			else{
+				Logger.w(TAG, "Login failed with result: " + loginResult);
+				return loginResult;
+			}
 		}
 
 		if (sessionKey == null || sessionKey.equals("")) {
 			return RESULT.NOSESSIONKEY;
 		}
-		if (personaName == null || personaName.equals("")) {
-			return RESULT.NOUSERNAME;
-		}
-		if (personaId == null || sessionKey.equals("")) {
-			return RESULT.NOPERSONAID;
-		}
+		
 
 		Long tsLong = System.currentTimeMillis() / 1000;
 
@@ -484,9 +413,9 @@ public class Client {
 
 		try {
 			List<NameValuePair> paare = new ArrayList<NameValuePair>(5); // Post-Parameter
-			paare.add(new BasicNameValuePair("personaId", personaId));
+			paare.add(new BasicNameValuePair("personaId", persona.personaId));
 
-			paare.add(new BasicNameValuePair("platformInt", "" + platform));
+			paare.add(new BasicNameValuePair("platformInt", "" + persona.personaId));
 			paare.add(new BasicNameValuePair("loadout", loadout));
 			paare.add(new BasicNameValuePair("timestamp", tsLong.toString()));
 			httppost.setEntity(new UrlEncodedFormEntity(paare));
@@ -543,10 +472,44 @@ public class Client {
 	}
 	
 	public String getPersonaName(){
-		if(personaName==null||personaName.equals("")){
+		if(persona==null||persona.personaName.equals("")){
 			return "Unknown";
 		}
-		return personaName;
+		return persona.personaName;
 	}
+	
+	public class Persona{
+		public String personaName;
+		public String personaId;
+		public int platform;
+		
+		@Override
+		public String toString(){
+			return "N: "+personaName+" Id: "+personaId+" Pl: "+platform;
+		}
+		
+		
+	}
+	public interface IConnectionListener {
+		public void failedToLogin(String error);
+
+		public void loggedIn(Persona persona);
+		
+		public void choosePersona(ArrayList<Persona> personas, IPersonaListener listener);
+	}
+	
+	@Override
+	public void choosenPersona(Persona persona) {
+		synchronized(persona){
+			this.persona=persona;
+			if(conListener!=null){
+				conListener.loggedIn(persona);
+			}
+		}
+		
+	}
+	
+	
+
 
 }
