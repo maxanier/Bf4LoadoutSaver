@@ -47,6 +47,8 @@ public class Constants {
 	public static final String BJSON_PERSONAID = "personaId";
 	public static final String BJSON_PERSONANAME = "personaName";
 	public static final String BJSON_PLATFORMINT = "platformInt";
+	public static final String BJSON_GAMES="games";
+	public static final String BJSON_SESSIONKEY="sessionKey";
 
 	// Instructions
 	public static final Instruction INSTRUCTION_OPTIONS = new Instruction(
@@ -73,7 +75,7 @@ public class Constants {
 			return "XBox-One";
 		default:
 			return "unknown";
-			// TODO
+			
 		}
 	}
 
