@@ -6,7 +6,7 @@ import de.maxgb.android.util.InfoBox.Instruction;
 public class Constants {
 	// Connection Parameter
 	public final static int CONNECTION_TIMEOUT = 10000;
-	public final static int LOGIN_TIMEOUT = 100000;
+	public final static int LOGIN_TIMEOUT = 1000000;
 
 	// Setting keys
 	public final static String PREF_NAME = "settings";

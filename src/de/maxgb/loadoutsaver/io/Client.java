@@ -46,10 +46,9 @@ public class Client implements IPersonaListener {
 
 	HttpClient httpclient;
 	// Login, SessionKey & Userinfo
-	private boolean loggedIn = false;
 	private long loggedInSince = 0;
 	private String sessionKey = "";
-	private Persona persona;
+	private Persona persona=null;
 
 	private JSONObject lastFullLoadout;
 
@@ -68,8 +67,7 @@ public class Client implements IPersonaListener {
 	}
 
 	private int checkLogin() {
-		if (!isLoggedIn() == false
-				|| System.currentTimeMillis() - getLoggedInSince() > Constants.LOGIN_TIMEOUT || persona==null) {
+		if (System.currentTimeMillis() - getLoggedInSince() > Constants.LOGIN_TIMEOUT || persona==null|| sessionKey.equals("")) {
 			return login();
 		}
 		return RESULT.OK;
@@ -101,9 +99,7 @@ public class Client implements IPersonaListener {
 		return loggedInSince;
 	}
 
-	public boolean isLoggedIn() {
-		return loggedIn;
-	}
+
 
 	private synchronized int login() {
 
@@ -293,15 +289,7 @@ public class Client implements IPersonaListener {
 				Logger.i(TAG, "GetLoadout short responseString: "
 						+ debugShortResponse); // TODO Remove if fully working
 
-				if (responseString.contains("success\":0")) {
-					// Answer with no success;
-					return RESULT.REQUESTFAILED;
-				}
 				
-				if(responseString.contains("\"error\":\"nostats\"")){
-					//Soldier has no stats or does not exist
-					return RESULT.NOSTATS;
-				}
 
 				JSONObject currentLoadout = null;
 				JSONArray vehicles = null;
@@ -310,6 +298,25 @@ public class Client implements IPersonaListener {
 
 				try {
 					JSONObject responseJson = new JSONObject(responseString);
+					
+					if(responseJson.getInt("success")==0){
+						if(responseJson.has("error")){
+							if(responseJson.getString("error").equals("SESSION_NOT_FOUND")){
+								//Session probably expired
+								Logger.w(TAG, "Session is probably expired -> relogin");
+								persona=null;
+								sessionKey="";
+								return saveCurrentLoadout(loadout);
+							}
+							else if(responseJson.getString("error").equals("nostats")){
+								//Soldier does not exist or has not played yet
+								return RESULT.NOSTATS;
+							}
+						}
+						
+						return RESULT.REQUESTFAILED;
+					}
+					
 					JSONObject data = responseJson
 							.getJSONObject(Constants.BJSON_DATA);
 					currentLoadout = data
@@ -444,16 +451,36 @@ public class Client implements IPersonaListener {
 				responseString = out.toString();
 			} catch (IOException e) {
 				Logger.e(TAG, "Error while reading response", e);
-				responseString = "";
+				return RESULT.REQUESTFAILED;
 
 			}
 
 			Logger.i(TAG, "SendLoadout responseString: " + responseString);
 
-			if (!responseString.contains("success\":1")) {
-				// Anwser with no success;
-				return RESULT.REQUESTFAILED;
+			JSONObject responseJson;
+			try {
+				responseJson = new JSONObject(responseString);
+				if(responseJson.getInt("success")==0){
+					if(responseJson.has("error")){
+						if(responseJson.getString("error").equals("SESSION_NOT_FOUND")){
+							Logger.w(TAG, "Session is probably expired -> relogin");
+							//Session probably expired
+							persona=null;
+							sessionKey="";
+							return sendLoadout(loadout);
+						}
+						else if(responseJson.getString("error").equals("nostats")){
+							//Soldier does not exist or has not played yet
+							return RESULT.NOSTATS;
+						}
+					}
+					
+					return RESULT.REQUESTFAILED;
+				}
+			} catch (JSONException e) {
+				Logger.e(TAG, "Failed parsing send Loadout result",e);
 			}
+			
 		} else {
 			Logger.w(TAG, "Loadout Sending failed with ReasonPhrase: "
 					+ response.getStatusLine().getReasonPhrase());
