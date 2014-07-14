@@ -30,5 +30,6 @@
     <color name="red">#FF0000</color>
     <string name="status_not_logged_in">Not logged in yet</string>
     <string name="pick_color">Pick a color</string>
+    <string name="allow_mix_loadouts">Allow to mix Loadouts from different soldiers (risky)</string>
 
 </resources>

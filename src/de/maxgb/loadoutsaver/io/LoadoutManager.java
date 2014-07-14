@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -36,7 +37,6 @@ public class LoadoutManager {
 	private ArrayList<Loadout> loadout;
 	private ArrayList<Loadout> query;
 
-	private final String CURRENTVERSION = "2";
 
 	private LoadoutManager() {
 		loadout = readLoadout();
@@ -61,25 +61,8 @@ public class LoadoutManager {
 				removeLoadout(i);
 			}
 		}
-
-		File loadoutFile = getLoadoutFile();
-
-		try {
-			loadoutFile.createNewFile();
-			BufferedWriter output = new BufferedWriter(new FileWriter(
-					loadoutFile, true));
-			output.newLine();
-			output.append(temp.toString(Constants.LOADOUT_SEPERATOR));
-			output.close();
-			loadout.add(temp);
-
-			return true;
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			Logger.e(TAG, "Adding Loadout failed", e);
-		}
-		return false;
+		loadout.add(temp);
+		return writeLoadout(loadout);
 	}
 
 	/**
@@ -93,15 +76,7 @@ public class LoadoutManager {
 		Logger.i(TAG, "Added queried Loadouts");
 	}
 
-	public boolean checkIfOldFileExists() {
-		File loadoutFile = new File(Constants.DIRECTORY
-				+ Constants.LOADOUT_OLD_FILE_NAME);
-		if (loadoutFile.exists()) {
-			loadoutFile.delete();
-			return true;
-		}
-		return false;
-	}
+
 
 	public ArrayList<Loadout> getLoadout() {
 		return loadout;
@@ -117,14 +92,14 @@ public class LoadoutManager {
 			if (loadoutFile.createNewFile()) {
 				BufferedWriter output = new BufferedWriter(new FileWriter(
 						loadoutFile, false));
-				output.append("VERSION:" + CURRENTVERSION);
+				output.append("{}");
 				output.newLine();
 				output.flush();
 				output.close();
 			}
 		} catch (IOException e) {
 			Logger.e(TAG,
-					"Failed to create a new file and to fill it with version info");
+					"Failed to create a new file");
 		}
 
 		return loadoutFile;
@@ -150,53 +125,112 @@ public class LoadoutManager {
 		query.add(temp);
 		Logger.i(TAG, "Queried Loadout: " + temp.getName());
 	}
-
-	private ArrayList<Loadout> readLoadout() {
-		Logger.i(TAG, "Start reading Loadout");
+	
+	private void rewriteOldLoadout(File oldLoadoutFile){
+		if (!oldLoadoutFile.exists()) {
+			Logger.w(TAG, "Cant rewrite: oldLoadoutFile doesn´t exist");
+			return;
+		}
+		if (!oldLoadoutFile.canRead()) {
+			Logger.w(TAG, "Cant rewrite: Can´t read oldLoadout File");
+			return;
+		}
 		ArrayList<Loadout> temp = new ArrayList<Loadout>();
-		String version = "0";
-		File loadoutFile = new File(Constants.DIRECTORY
-				+ Constants.LOADOUT_FILE_NAME);
-
-		if (!loadoutFile.exists()) {
-			Logger.w(TAG, "LoadoutFile doesn´t exist");
-			return temp;
-		}
-		if (!loadoutFile.canRead()) {
-			Logger.w(TAG, "Can´t read Loadout File");
-			return temp;
-		}
 
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(loadoutFile));
+			BufferedReader br = new BufferedReader(new FileReader(oldLoadoutFile));
 
 			String line = br.readLine();
 
 			if (line != null && line.startsWith("Version:")) {
-				version = line.replace("Version:", "");
+				
 				line = br.readLine();
 			}
 
 			while (line != null) {
-				Loadout l = readLoadout(line);
+				Loadout l = readOldLoadout(line);
 				if (l != null) {
 					temp.add(l);
 				}
 				line = br.readLine();
 			}
+			
+			writeLoadout(temp);
 
 		} catch (FileNotFoundException e) {
 			Logger.e(
 					TAG,
-					"FileNotFoundException even though file existence was checked",
+					"FileNotFoundException even though oldFile existence was checked",
 					e);
 		} catch (IOException e) {
-			Logger.e(TAG, "IOException while reading Loadout", e);
+			Logger.e(TAG, "IOException while reading oldLoadout", e);
 		}
+	}
+
+	private ArrayList<Loadout> readLoadout() {
+		Logger.i(TAG, "Start reading Loadout");
+		
+		Logger.i(TAG, "Testing of old file exists");
+		File oldLoadoutFile = new File(Constants.DIRECTORY
+				+ Constants.LOADOUT_OLD_FILE_NAME);
+		if(oldLoadoutFile.exists()){
+			Logger.i(TAG, "Found old one");
+			rewriteOldLoadout(oldLoadoutFile);
+			if(!oldLoadoutFile.delete()){
+				oldLoadoutFile.deleteOnExit();
+			}
+		}
+		
+		Logger.i(TAG, "Reading new Loadoutfile");
+		ArrayList<Loadout> temp = new ArrayList<Loadout>();
+		
+		File loadoutFile=new File(Constants.DIRECTORY+Constants.LOADOUT_FILE_NAME);
+		
+		if(!loadoutFile.exists()){
+			Logger.w(TAG, "Loadout file does not exist");
+			return temp;
+		}
+		
+		if(!loadoutFile.canRead()){
+			Logger.w(TAG, "Cant read loadoutfile");
+			return temp;
+		}
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(loadoutFile));
+			String line=reader.readLine();
+			
+			JSONObject data = new JSONObject(line);
+			if(data.has("loadouts")){
+				JSONArray loadouts=data.getJSONArray("loadouts");
+				for(int i=0;i<loadouts.length();i++){
+					Loadout l=Loadout.fromJSON(loadouts.getJSONObject(i));
+					if(l!=null){
+						temp.add(l);
+					}
+				}
+			}
+			else{
+				Logger.i(TAG, "JSON did not include any loadouts");
+			}
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+
+		
 
 		Logger.i(TAG, "Found " + temp.size() + " Loadouts");
 		return temp;
 	}
+	
 
 	/**
 	 * Converts a single loadout line into a new loadout object.
@@ -204,7 +238,7 @@ public class LoadoutManager {
 	 * @param s
 	 * @return
 	 */
-	private Loadout readLoadout(String s) {
+	private Loadout readOldLoadout(String s) {
 		if (s == null)
 			return null;
 
@@ -230,7 +264,7 @@ public class LoadoutManager {
 						e.printStackTrace();
 					}
 				}
-				return new Loadout(name, loadout, weapons, kits, vehicles,color);
+				return new Loadout(name, loadout, weapons, kits, vehicles,color,"");
 			} else {
 				Logger.e(TAG, "Loadoutline did not contain 5/6 parts");
 			}
@@ -256,10 +290,15 @@ public class LoadoutManager {
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(
 					loadoutFile, false));
+			JSONObject json=new JSONObject();
+			JSONArray array=new JSONArray();
 			for (int i = 0; i < list.size(); i++) {
-				output.newLine();
-				output.append(list.get(i).toString(Constants.LOADOUT_SEPERATOR));
+				array.put(list.get(i).toJson());
 			}
+			
+			json.put("loadouts", array);
+			
+			output.write(json.toString());
 
 			output.close();
 			return true;
@@ -267,6 +306,8 @@ public class LoadoutManager {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			Logger.e(TAG, "Writing Loadout failed", e);
+		} catch (JSONException e) {
+			Logger.e(TAG, "Createing Loadout Json failed",e);
 		}
 		return false;
 	}

@@ -11,6 +11,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -44,14 +45,14 @@ import com.google.analytics.tracking.android.StandardExceptionParser;
 import de.maxgb.android.util.InfoBox;
 import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.io.Client;
-import de.maxgb.loadoutsaver.io.IConnectionListener;
 import de.maxgb.loadoutsaver.io.LoadoutManager;
+import de.maxgb.loadoutsaver.io.Client.Persona;
 import de.maxgb.loadoutsaver.util.Constants;
 import de.maxgb.loadoutsaver.util.Loadout;
 import de.maxgb.loadoutsaver.util.RESULT;
 
 public class LoadoutMainActivity extends SherlockFragmentActivity implements
-		LoadoutNameDialog.LoadoutNameDialogListener, IConnectionListener {
+		LoadoutNameDialog.LoadoutNameDialogListener,Client.IConnectionListener {
 
 	// AsyncTask---------------------------------------------------------------------
 	/**
@@ -128,8 +129,8 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nYour soldier ("+Client.getInstance(getSharedPreferences()).getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
 				reportToAnalytics("action","save","nostats");
 			}
-			else if(result == RESULT.NOPLATFORMID){
-				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nYou may need to be playing BF4 when trying to save a loadout");
+			else if(result == RESULT.NOPERSONA){
+				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nDo you own Battlefield 4?");
 				reportToAnalytics("action","save","no_platformid");
 			} else {
 				showErrorDialog(res
@@ -183,7 +184,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			Client client = Client.getInstance(getSharedPreferences());
 
 			int saveOldLoadoutResult = client.saveCurrentLoadout(new Loadout(
-					"Old Loadout", new JSONObject(), true, true, true,Color.BLACK));
+					"Old Loadout", new JSONObject(), true, true, true,Color.BLACK,""));
 			if (saveOldLoadoutResult != RESULT.OK) {
 				Logger.w(TAG, "Failed to save old Loadout");
 				return saveOldLoadoutResult;
@@ -221,9 +222,13 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 					full.put(Constants.BJSON_WEAPONS, loadout.getLoadout()
 							.getJSONObject(Constants.BJSON_WEAPONS));
 				}
-
+				String id=loadout.getPersonaId();
+				if(getSharedPreferences().getBoolean(Constants.MIX_LOADOUTS_KEY, false)){
+					id="";
+				}
+				
 				Logger.i(TAG, full.toString());
-				return client.sendLoadout(full.toString());
+				return client.sendLoadout(full.toString(),id);
 			} catch (JSONException e) {
 				Logger.e(TAG,
 						"Error while putting Loadout together for sending", e);
@@ -274,10 +279,15 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 						+ ".\nBattlelog probably changed something on their servers, please report this problem to get it fixed");
 				reportToAnalytics("action","send","server_error");
 			}
-			else if(result == RESULT.NOPLATFORMID){
-				showErrorDialog(res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nYou may need to be playing BF4 when trying to send a loadout");
-				reportToAnalytics("action","send","no_platformid");
-			} else {
+			else if(result == RESULT.NOPERSONA){
+				showErrorDialog(res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nDo you own Battlefield 4?");
+				reportToAnalytics("action","send","no_persona");
+			}
+			else if(result == RESULT.MIXED_LOADOUTS){
+				showErrorDialog("You tried to mix Loadouts, this could create problems, if you want to do it anyway activate it in the settings menu.",false);
+			}
+			else {
+			
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_send_loadout)
 						+ " " + result);
@@ -307,9 +317,9 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 					Constants.TOAST_DURATION).show();
 			return;
 		}
-		Loadout loadout = new Loadout(name, new JSONObject(), w, k, v,color);
+		Loadout loadout = new Loadout(name, new JSONObject(), w, k, v,color,"");
 
-		Logger.i(TAG, "User wants new Loadout: " + loadout.toString(" "));
+		Logger.i(TAG, "User wants new Loadout: " + loadout.toString());
 		SaveLoadoutTask task = new SaveLoadoutTask();
 		task.execute(loadout);
 	}
@@ -346,7 +356,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 	}
 
 	@Override
-	public void loggedIn(final String persona, final String platform) {
+	public void loggedIn(final Client.Persona persona) {
 		try {
 			if(activity!=null){
 				final Activity context = activity;
@@ -356,8 +366,8 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 					public void run() {
 						
 						SuperCardToast toast = SuperCardToast.create(context,
-								"Logged in with soldier: " + persona + " on "
-										+ platform, SuperToast.Duration.LONG);
+								"Logged in with soldier: " + persona.personaName + " on "
+										+ Constants.getPlatformFromInt(persona.platform), SuperToast.Duration.LONG);
 						toast.setBackground(SuperToast.Background.GREEN);
 						toast.show();
 
@@ -369,7 +379,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			Logger.e(TAG, "Error while showing logged in Toast",e);
 			reportError(e);
 		}
-		reportToAnalytics("status","platform",platform);
+		reportToAnalytics("status","platform",""+persona.platform);
 
 	}
 
@@ -461,12 +471,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 				this.getSharedPreferences(Constants.PREF_NAME, 0), this,
 				Constants.INSTRUCTION_OPTIONS);
 
-		if (loadoutManager.checkIfOldFileExists()) {
-			InfoBox.showInfoBox(
-					this,
-					"Old Loadouts deleted",
-					"Because of a bigger update behind the scenes all previous loadouts had to be deleted. Sorry.");
-		}
+
 		
 		
 	}
@@ -740,6 +745,45 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 	public void updateList() {
 		Logger.i(TAG, "UpdatingList");
 		((CustomArrayAdapter) list.getAdapter()).notifyDataSetChanged();
+	}
+	
+	public interface IPersonaListener{
+		public void choosenPersona(Persona persona);
+	}
+
+	@Override
+	public void choosePersona(final ArrayList<Persona> personas,
+			final IPersonaListener listener) {
+		
+		Runnable run=new Runnable(){
+
+			@Override
+			public void run() {
+				AlertDialog d=null;
+				AlertDialog.Builder adb = new AlertDialog.Builder(activity);
+				CharSequence items[] = new CharSequence[personas.size()];
+				for(int i=0;i<personas.size();i++){
+					items[i]=personas.get(i).personaName+" on "+Constants.getPlatformFromInt(personas.get(i).platform);
+				}
+				
+				adb.setSingleChoiceItems(items, -1, new OnClickListener() {
+
+				        @Override
+				        public void onClick(DialogInterface d, int n) {
+				            listener.choosenPersona(personas.get(n));
+				            d.dismiss();
+				        }
+
+				});
+				adb.setTitle("Choose your soldier");
+				d=adb.show();
+				
+				
+			}
+			
+		};
+		activity.runOnUiThread(run);
+		
 	}
 
 }
