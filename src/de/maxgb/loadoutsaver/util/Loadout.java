@@ -2,6 +2,7 @@ package de.maxgb.loadoutsaver.util;
 
 import java.util.ArrayList;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
@@ -9,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import de.maxgb.android.util.GraphicUtils;
+import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.R;
 
 public class Loadout implements Cloneable {
@@ -41,6 +43,10 @@ public class Loadout implements Cloneable {
 		this.kits = kits;
 		this.vehicles = vehicles;
 		this.color=color;
+	}
+	
+	private Loadout(){
+		
 	}
 
 	@Override
@@ -109,17 +115,36 @@ public class Loadout implements Cloneable {
 		return name + s + (weapons ? "1" : "0") + s + (kits ? "1" : "0") + s
 				+ (vehicles ? "1" : "0");
 	}
+	
+	public JSONObject toJson(){
+		JSONObject json=new JSONObject();
+		try {
+			return json.put("name", name).put("loadout", loadout).put("weapons", weapons).put("vehicles",vehicles).put("kits", kits).put("color", color);
+		} catch (JSONException e) {
+			Logger.e("Loadout", "Failed to create Json from Loadout",e);
+			return json;
+		}
+		
+		
+	}
 
-	/**
-	 * returns a string representing this laodout object
-	 * 
-	 * @param s
-	 *            seperator
-	 * @return
-	 */
-	public String toString(String s) {
-		return name + s + (weapons ? "1" : "0") + s + (kits ? "1" : "0") + s
-				+ (vehicles ? "1" : "0") + s + loadout.toString()+ s+color;
+	
+	public static Loadout fromJSON(JSONObject json){
+		
+		
+		try {
+			Loadout l=new Loadout();
+			l.name=json.getString("name");
+			l.loadout=json.getJSONObject("loadout");
+			l.weapons=json.getBoolean("weapons");
+			l.vehicles=json.getBoolean("vehicles");
+			l.kits=json.getBoolean("kits");
+			l.color=json.getInt("color");
+			return l;
+		} catch (JSONException e) {
+			Logger.e("Loadout", "Failed to create Loadout frome json",e);
+			return null;
+		}
 	}
 
 }

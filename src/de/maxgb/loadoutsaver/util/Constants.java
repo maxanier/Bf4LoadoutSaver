@@ -24,8 +24,8 @@ public class Constants {
 	// Directorys and files
 	public static final String DIRECTORY = Environment
 			.getExternalStorageDirectory().getPath() + "/bf4Loadout/";
-	public static final String LOADOUT_FILE_NAME = "loadout";
-	public static final String LOADOUT_OLD_FILE_NAME = "loadout.txt";
+	public static final String LOADOUT_FILE_NAME = "loadout.json";
+	public static final String LOADOUT_OLD_FILE_NAME = "loadout";
 	public static final String LOADOUT_SEPERATOR = "!";
 
 	// Loadout types

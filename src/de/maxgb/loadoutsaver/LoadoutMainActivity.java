@@ -310,7 +310,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		}
 		Loadout loadout = new Loadout(name, new JSONObject(), w, k, v,color);
 
-		Logger.i(TAG, "User wants new Loadout: " + loadout.toString(" "));
+		Logger.i(TAG, "User wants new Loadout: " + loadout.toString());
 		SaveLoadoutTask task = new SaveLoadoutTask();
 		task.execute(loadout);
 	}
@@ -462,12 +462,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 				this.getSharedPreferences(Constants.PREF_NAME, 0), this,
 				Constants.INSTRUCTION_OPTIONS);
 
-		if (loadoutManager.checkIfOldFileExists()) {
-			InfoBox.showInfoBox(
-					this,
-					"Old Loadouts deleted",
-					"Because of a bigger update behind the scenes all previous loadouts had to be deleted. Sorry.");
-		}
+
 		
 		
 	}
