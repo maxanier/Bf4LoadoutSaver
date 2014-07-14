@@ -184,7 +184,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			Client client = Client.getInstance(getSharedPreferences());
 
 			int saveOldLoadoutResult = client.saveCurrentLoadout(new Loadout(
-					"Old Loadout", new JSONObject(), true, true, true,Color.BLACK));
+					"Old Loadout", new JSONObject(), true, true, true,Color.BLACK,""));
 			if (saveOldLoadoutResult != RESULT.OK) {
 				Logger.w(TAG, "Failed to save old Loadout");
 				return saveOldLoadoutResult;
@@ -222,9 +222,13 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 					full.put(Constants.BJSON_WEAPONS, loadout.getLoadout()
 							.getJSONObject(Constants.BJSON_WEAPONS));
 				}
-
+				String id=loadout.getPersonaId();
+				if(getSharedPreferences().getBoolean(Constants.MIX_LOADOUTS_KEY, false)){
+					id="";
+				}
+				
 				Logger.i(TAG, full.toString());
-				return client.sendLoadout(full.toString());
+				return client.sendLoadout(full.toString(),id);
 			} catch (JSONException e) {
 				Logger.e(TAG,
 						"Error while putting Loadout together for sending", e);
@@ -278,7 +282,12 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			else if(result == RESULT.NOPERSONA){
 				showErrorDialog(res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nDo you own Battlefield 4?");
 				reportToAnalytics("action","send","no_persona");
-			} else {
+			}
+			else if(result == RESULT.MIXED_LOADOUTS){
+				showErrorDialog("You tried to mix Loadouts, this could create problems, if you want to do it anyway activate it in the settings menu.",false);
+			}
+			else {
+			
 				showErrorDialog(res
 						.getString(R.string.message_failed_to_send_loadout)
 						+ " " + result);
@@ -308,7 +317,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 					Constants.TOAST_DURATION).show();
 			return;
 		}
-		Loadout loadout = new Loadout(name, new JSONObject(), w, k, v,color);
+		Loadout loadout = new Loadout(name, new JSONObject(), w, k, v,color,"");
 
 		Logger.i(TAG, "User wants new Loadout: " + loadout.toString());
 		SaveLoadoutTask task = new SaveLoadoutTask();

@@ -22,4 +22,5 @@ public class RESULT {
 	public final static int NOSTATS=14;
 	public final static int WAITFORPERSONA=15;
 	public final static int NOPERSONA=16;
+	public final static int MIXED_LOADOUTS=17;
 }

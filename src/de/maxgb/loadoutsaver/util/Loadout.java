@@ -20,6 +20,7 @@ public class Loadout implements Cloneable {
 	private boolean kits;
 	private boolean vehicles;
 	private int color;
+	private String personalId;
 
 	/**
 	 * 
@@ -36,7 +37,7 @@ public class Loadout implements Cloneable {
 	 * @param color Color for displaying purpose
 	 */
 	public Loadout(String name, JSONObject loadout, boolean weapons,
-			boolean kits, boolean vehicles,int color) {
+			boolean kits, boolean vehicles,int color,String personalId) {
 		this.name = name;
 		this.loadout = loadout;
 		this.weapons = weapons;
@@ -46,12 +47,12 @@ public class Loadout implements Cloneable {
 	}
 	
 	private Loadout(){
-		
+		personalId="";
 	}
 
 	@Override
 	public Loadout clone() {
-		return new Loadout(name, loadout, weapons, kits, vehicles,color);
+		return new Loadout(name, loadout, weapons, kits, vehicles,color,personalId);
 	}
 
 	public boolean containsKits() {
@@ -119,7 +120,7 @@ public class Loadout implements Cloneable {
 	public JSONObject toJson(){
 		JSONObject json=new JSONObject();
 		try {
-			return json.put("name", name).put("loadout", loadout).put("weapons", weapons).put("vehicles",vehicles).put("kits", kits).put("color", color);
+			return json.put("name", name).put("loadout", loadout).put("weapons", weapons).put("vehicles",vehicles).put("kits", kits).put("color", color).put("personalId",personalId);
 		} catch (JSONException e) {
 			Logger.e("Loadout", "Failed to create Json from Loadout",e);
 			return json;
@@ -140,11 +141,23 @@ public class Loadout implements Cloneable {
 			l.vehicles=json.getBoolean("vehicles");
 			l.kits=json.getBoolean("kits");
 			l.color=json.getInt("color");
+			if(json.has("personalId")){
+				l.personalId=json.getString("personalId");
+			}
+			
 			return l;
 		} catch (JSONException e) {
 			Logger.e("Loadout", "Failed to create Loadout frome json",e);
 			return null;
 		}
+	}
+	
+	public void setPersonaId(String p){
+		this.personalId=p;
+	}
+	
+	public String getPersonaId(){
+		return personalId;
 	}
 
 }

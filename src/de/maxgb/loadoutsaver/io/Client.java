@@ -355,7 +355,10 @@ public class Client implements IPersonaListener {
 					if (loadout.containsWeapons()) {
 						finishedLoadout.put(Constants.BJSON_WEAPONS, weapons);
 					}
-
+					
+					
+					
+					loadout.setPersonaId(persona.personaId);
 					loadout.setLoadout(finishedLoadout);
 				} catch (JSONException e) {
 					Logger.e(TAG, "Failed to add parts to finished Loadout", e);
@@ -392,7 +395,7 @@ public class Client implements IPersonaListener {
 
 	}
 
-	public synchronized int sendLoadout(String loadout) {
+	public synchronized int sendLoadout(String loadout,String id) {
 
 		// Check login
 		int loginResult = checkLogin();
@@ -412,6 +415,12 @@ public class Client implements IPersonaListener {
 			return RESULT.NOSESSIONKEY;
 		}
 		
+		if(!id.equals("")){
+			if(!id.equals(persona.personaId)){
+				Logger.w(TAG, "Trying to mix Loadouts");
+				return RESULT.MIXED_LOADOUTS;
+			}
+		}
 
 		Long tsLong = System.currentTimeMillis() / 1000;
 
@@ -467,7 +476,7 @@ public class Client implements IPersonaListener {
 							//Session probably expired
 							persona=null;
 							sessionKey="";
-							return sendLoadout(loadout);
+							return sendLoadout(loadout,id);
 						}
 						else if(responseJson.getString("error").equals("nostats")){
 							//Soldier does not exist or has not played yet
@@ -504,6 +513,13 @@ public class Client implements IPersonaListener {
 			return "Unknown";
 		}
 		return persona.personaName;
+	}
+	
+	public String getPersonaId(){
+		if(persona==null){
+			return "";
+		}
+		return persona.personaId;
 	}
 	
 	public class Persona{

@@ -51,6 +51,12 @@
 	        android:layout_height="wrap_content"
 	        android:text="@string/screenlock_option" />
 
+	    <CheckBox
+	        android:id="@+id/checkBox_mix_loadouts"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/allow_mix_loadouts" />
+
 	    <Button
 	        android:id="@+id/button2"
 	        android:layout_width="wrap_content"

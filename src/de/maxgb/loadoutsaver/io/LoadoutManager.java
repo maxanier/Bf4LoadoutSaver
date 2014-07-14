@@ -264,7 +264,7 @@ public class LoadoutManager {
 						e.printStackTrace();
 					}
 				}
-				return new Loadout(name, loadout, weapons, kits, vehicles,color);
+				return new Loadout(name, loadout, weapons, kits, vehicles,color,"");
 			} else {
 				Logger.e(TAG, "Loadoutline did not contain 5/6 parts");
 			}
