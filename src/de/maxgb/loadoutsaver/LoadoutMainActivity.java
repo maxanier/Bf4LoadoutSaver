@@ -227,7 +227,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 					id="";
 				}
 				
-				Logger.i(TAG, full.toString());
+				
 				return client.sendLoadout(full.toString(),id);
 			} catch (JSONException e) {
 				Logger.e(TAG,

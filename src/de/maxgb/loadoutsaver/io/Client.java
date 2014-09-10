@@ -300,6 +300,7 @@ public class Client implements IPersonaListener {
 					JSONObject responseJson = new JSONObject(responseString);
 					
 					if(responseJson.getInt("success")==0){
+						Logger.e(TAG,"Get Loadout request not successfull\n"+responseJson.toString());
 						if(responseJson.has("error")){
 							if(responseJson.getString("error").equals("SESSION_NOT_FOUND")){
 								//Session probably expired
@@ -314,11 +315,23 @@ public class Client implements IPersonaListener {
 							}
 						}
 						
+						
+						
 						return RESULT.REQUESTFAILED;
 					}
 					
 					JSONObject data = responseJson
 							.getJSONObject(Constants.BJSON_DATA);
+					
+					try {
+						Logger.i(TAG, "Player information: ID:"+data.getString(Constants.BJSON_PERSONAID)+" Name: "+data.getString(Constants.BJSON_PERSONANAME)+ " Platform: "+data.getString(Constants.BJSON_PLATFORMINT));
+						
+						if(data.getBoolean("mySoldier")){
+							Logger.w(TAG, "Player doesnt belong to user");
+						}
+					} catch (JSONException e) {
+						Logger.e(TAG, "Failed to get player informations",e);
+					}
 					currentLoadout = data
 							.getJSONObject(Constants.BJSON_CURRENT_LOADOUT);
 					vehicles = currentLoadout
@@ -329,6 +342,7 @@ public class Client implements IPersonaListener {
 
 				} catch (JSONException e1) {
 					Logger.e(TAG, "Failed to parse loadout answer to JSON", e1);
+					Logger.e(TAG, "JSON:\n"+responseString);
 					return RESULT.INTERNALSERVERERROR;
 				}
 
@@ -470,6 +484,7 @@ public class Client implements IPersonaListener {
 			try {
 				responseJson = new JSONObject(responseString);
 				if(responseJson.getInt("success")==0){
+					Logger.w(TAG, "Repsonse without success: "+responseString);
 					if(responseJson.has("error")){
 						if(responseJson.getString("error").equals("SESSION_NOT_FOUND")){
 							Logger.w(TAG, "Session is probably expired -> relogin");
@@ -484,10 +499,12 @@ public class Client implements IPersonaListener {
 						}
 					}
 					
+					
 					return RESULT.REQUESTFAILED;
 				}
 			} catch (JSONException e) {
 				Logger.e(TAG, "Failed parsing send Loadout result",e);
+				Logger.e(TAG, "JSONString; "+responseString);
 			}
 			
 		} else {
