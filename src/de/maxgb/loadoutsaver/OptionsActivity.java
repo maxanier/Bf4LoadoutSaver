@@ -27,6 +27,7 @@ public class OptionsActivity extends Activity {
 	private TextView password;
 	private CheckBox analyse;
 	private CheckBox screenLock;
+	private CheckBox mixLoadouts;
 	
 
 	public void abort(View v) {
@@ -80,6 +81,7 @@ public class OptionsActivity extends Activity {
 		password = (TextView) findViewById(R.id.edit_password);
 		analyse = (CheckBox) findViewById(R.id.checkBox_analyse);
 		screenLock = (CheckBox) findViewById(R.id.checkBox_screenlock);
+		mixLoadouts = (CheckBox) findViewById(R.id.checkBox_mix_loadouts);
 
 		SharedPreferences prefs = getSharedPreferences(Constants.PREF_NAME, 0);
 
@@ -93,7 +95,8 @@ public class OptionsActivity extends Activity {
 				false));
 		screenLock.setChecked(prefs.getBoolean(Constants.KEEP_SCREEN_ON_KEY,
 				false));
-
+		
+		mixLoadouts.setChecked(prefs.getBoolean(Constants.MIX_LOADOUTS_KEY, false));
 	}
 
 	@Override
@@ -131,6 +134,7 @@ public class OptionsActivity extends Activity {
 				.trim());
 		editor.putBoolean(Constants.ANALYSE_LOADOUT_KEY, analyse.isChecked());
 		editor.putBoolean(Constants.KEEP_SCREEN_ON_KEY, screenLock.isChecked());
+		editor.putBoolean(Constants.MIX_LOADOUTS_KEY, mixLoadouts.isChecked());
 		editor.commit();
 		finish();
 

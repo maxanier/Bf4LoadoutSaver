@@ -6,7 +6,7 @@ import de.maxgb.android.util.InfoBox.Instruction;
 public class Constants {
 	// Connection Parameter
 	public final static int CONNECTION_TIMEOUT = 10000;
-	public final static int LOGIN_TIMEOUT = 100000;
+	public final static int LOGIN_TIMEOUT = 1000000;
 
 	// Setting keys
 	public final static String PREF_NAME = "settings";
@@ -15,6 +15,7 @@ public class Constants {
 	public final static String PASSWORD_KEY = "password";
 	public final static String ANALYSE_LOADOUT_KEY = "analyse_loadout";
 	public final static String KEEP_SCREEN_ON_KEY = "keep_screen_on";
+	public final static String MIX_LOADOUTS_KEY="mix_loadouts";
 
 	// URLs
 	public final static String LOGIN_URL = "https://battlelog.battlefield.com/mobile/gettoken";
@@ -24,8 +25,8 @@ public class Constants {
 	// Directorys and files
 	public static final String DIRECTORY = Environment
 			.getExternalStorageDirectory().getPath() + "/bf4Loadout/";
-	public static final String LOADOUT_FILE_NAME = "loadout";
-	public static final String LOADOUT_OLD_FILE_NAME = "loadout.txt";
+	public static final String LOADOUT_FILE_NAME = "loadout.json";
+	public static final String LOADOUT_OLD_FILE_NAME = "loadout";
 	public static final String LOADOUT_SEPERATOR = "!";
 
 	// Loadout types
@@ -47,6 +48,8 @@ public class Constants {
 	public static final String BJSON_PERSONAID = "personaId";
 	public static final String BJSON_PERSONANAME = "personaName";
 	public static final String BJSON_PLATFORMINT = "platformInt";
+	public static final String BJSON_GAMES="games";
+	public static final String BJSON_SESSIONKEY="sessionKey";
 
 	// Instructions
 	public static final Instruction INSTRUCTION_OPTIONS = new Instruction(
@@ -73,7 +76,7 @@ public class Constants {
 			return "XBox-One";
 		default:
 			return "unknown";
-			// TODO
+			
 		}
 	}
 

@@ -87,7 +87,7 @@ public class LoadoutNameDialog extends DialogFragment {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				String name = ((EditText) thisDialog
-						.findViewById(R.id.loadoutname)).getText().toString();
+						.findViewById(R.id.loadoutname)).getText().toString().trim();
 				if (name.equals("")) {
 					name = "Loadout";
 				}
