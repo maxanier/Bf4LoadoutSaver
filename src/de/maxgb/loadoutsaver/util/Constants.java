@@ -19,6 +19,7 @@ public class Constants {
 
 	// URLs
 	public final static String LOGIN_URL = "https://battlelog.battlefield.com/mobile/gettoken";
+	public final static String TOKEN_CHALLENGE_URL= "https://battlelog.battlefield.com/mobile/tokenchallenge";
 	public final static String GETLOADOUT_URL = "https://battlelog.battlefield.com/bf4/mobile/getloadout";
 	public final static String SAVELOADOUT_URL = "https://battlelog.battlefield.com/bf4/mobile/saveloadout";
 

@@ -64,27 +64,7 @@ public class Client implements IPersonaListener {
 		lastFullLoadout = null;
 	}
 
-	private int checkLogin() {
-		if (System.currentTimeMillis() - getLoggedInSince() > Constants.LOGIN_TIMEOUT || persona==null|| sessionKey.equals("")) {
-			return login();
-		}
-		return RESULT.OK;
-	}
 
-	// AsyncTasks
-	/*
-	 * private class LoginTask extends AsyncTask<Void,Void,Integer>{
-	 * 
-	 * 
-	 * @Override protected Integer doInBackground(Void... params) {
-	 * 
-	 * return login(); }
-	 * 
-	 * @Override protected void onPostExecute(Integer result){
-	 * Logger.i(TAG,"Login process finished with result: "+result);
-	 * if(result==OK){ loggedIn=true; loggedInSince=System.currentTimeMillis();
-	 * } else{ loggedIn=false; } } }
-	 */
 
 	// Server communication methods
 
@@ -99,16 +79,7 @@ public class Client implements IPersonaListener {
 
 
 
-	private synchronized int login() {
-
-		String email = pref.getString(Constants.EMAIL_KEY, "");
-		String password = pref.getString(Constants.PASSWORD_KEY, "");
-
-		if (email.equals("") || password.equals("")) {
-			if (conListener != null)
-				conListener.failedToLogin("Login credentials missing");
-			return RESULT.LOGINCREDENTIALSMISSING;
-		}
+	public synchronized int login(String email,String password) {
 		Long tsLong = System.currentTimeMillis() / 1000;
 
 		Logger.i(TAG, "Loginvorgang gestartet");
@@ -207,7 +178,11 @@ public class Client implements IPersonaListener {
 				else{
 					Logger.i(TAG, "Multiple personas, asking user to choose");
 					conListener.choosePersona(personas, this);
-					return RESULT.WAITFORPERSONA;
+					while(persona==null){
+						Thread.yield();
+					}
+					conListener.loggedIn(persona);
+					return RESULT.OK;
 				}
 
 				
@@ -228,6 +203,51 @@ public class Client implements IPersonaListener {
 
 	}
 
+	public synchronized int loginQR(String qrtoken){
+		Long tsLong = System.currentTimeMillis() / 1000;
+
+		Logger.i(TAG, "Loginvorgang gestartet");
+		
+		//TOKEN CHALLENGE--------------------------------------------------------------------------
+		// Create Http-Post request
+		HttpPost httppost = new HttpPost(Constants.TOKEN_CHALLENGE_URL);
+
+		try {
+			List<NameValuePair> paare = new ArrayList<NameValuePair>(4); // Post-Parameter
+			paare.add(new BasicNameValuePair("token", qrtoken));
+			paare.add(new BasicNameValuePair("deviceType", "1"));
+			paare.add(new BasicNameValuePair("timestamp", tsLong.toString()));
+			httppost.setEntity(new UrlEncodedFormEntity(paare));
+			// -----------------------------------------------
+
+			HttpResponse response = httpclient.execute(httppost);
+			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				response.getEntity().writeTo(out);
+				out.close();
+				String responseString = out.toString();
+				Logger.i(TAG, "TOKEN challenge answer: "+responseString);
+				JSONObject r=new JSONObject(responseString);
+				r.getJSONObject("data").getString("challenge");
+				Logger.i(TAG, "Challenge");
+				
+			}
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return RESULT.OK;
+	}
 	/**
 	 * Downloads the currently equipped Loadout and querys it in LoadoutManager.
 	 * You need to call LoadoutManager.addQuery() in UI-Thread afterwards Also
@@ -238,20 +258,6 @@ public class Client implements IPersonaListener {
 	 * @return Errorcode
 	 */
 	public synchronized int saveCurrentLoadout(Loadout loadout) {
-
-		// Check login
-		int loginResult = checkLogin();
-		if (loginResult != RESULT.OK) {
-			if(loginResult==RESULT.WAITFORPERSONA){
-				while(persona==null){
-					Thread.yield();
-				}
-			}
-			else{
-				Logger.w(TAG, "Login failed with result: " + loginResult);
-				return loginResult;
-			}
-		}
 
 		if (sessionKey == null || sessionKey.equals("")) {
 			return RESULT.NOSESSIONKEY;
@@ -410,18 +416,7 @@ public class Client implements IPersonaListener {
 	public synchronized int sendLoadout(String loadout,String id) {
 
 		// Check login
-		int loginResult = checkLogin();
-		if (loginResult != RESULT.OK) {
-			if(loginResult==RESULT.WAITFORPERSONA){
-				while(persona==null){
-					Thread.yield();
-				}
-			}
-			else{
-				Logger.w(TAG, "Login failed with result: " + loginResult);
-				return loginResult;
-			}
-		}
+		
 
 		if (sessionKey == null || sessionKey.equals("")) {
 			return RESULT.NOSESSIONKEY;
@@ -566,7 +561,11 @@ public class Client implements IPersonaListener {
 	
 	
 	public boolean isLoggedIn(){
-		
+		if (System.currentTimeMillis() - getLoggedInSince() > Constants.LOGIN_TIMEOUT || persona==null|| sessionKey.equals("")) {
+			return false;
+		}
+		return true;
+		//TODO make a real check
 	}
 
 

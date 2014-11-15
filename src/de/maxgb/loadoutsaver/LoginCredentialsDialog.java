@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.EditText;
 
 
@@ -26,10 +27,15 @@ public class LoginCredentialsDialog extends DialogFragment{
 	    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 	    // Get the layout inflater
 	    LayoutInflater inflater = getActivity().getLayoutInflater();
-
 	    // Inflate and set the layout for the dialog
 	    // Pass null as the parent view because its going in the dialog layout
-	    builder.setView(inflater.inflate(R.layout.login_credentials_dialog, null))
+	    View view=inflater.inflate(R.layout.login_credentials_dialog, null);
+
+	    editEmail=(EditText)view.findViewById(R.id.login_dialog_email);
+	    editPassword=(EditText)view.findViewById(R.id.login_dialog_password);
+	    
+	    
+	    builder.setView(view)
 	    // Add action buttons
 	           .setPositiveButton("Login", new DialogInterface.OnClickListener() {
 	               @Override
@@ -45,9 +51,6 @@ public class LoginCredentialsDialog extends DialogFragment{
 	           });      
 	    
 	    AlertDialog dialog=builder.create();
-	    
-	    editEmail=(EditText)dialog.findViewById(R.id.login_dialog_email);
-	    editPassword=(EditText)dialog.findViewById(R.id.login_dialog_password);
 	    
 	    return dialog;
 	}

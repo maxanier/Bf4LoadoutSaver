@@ -350,23 +350,6 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		task.execute(loadout);
 	}
 
-	@Override
-	public void failedToLogin(final String error) {
-		final Activity context = this;
-		this.runOnUiThread(new Runnable() {
-
-			@Override
-			public void run() {
-				SuperCardToast toast = SuperCardToast.create(context,
-						"Failed to login: " + error, SuperToast.Duration.LONG);
-				toast.setBackground(SuperToast.Background.RED);
-				toast.show();
-
-			}
-
-		});
-
-	}
 
 	private SharedPreferences getSharedPreferences() {
 		return getSharedPreferences(Constants.PREF_NAME, 0);
@@ -430,7 +413,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		
 		//Initialize LoadoutManager and Client
 		LoadoutManager loadoutManager = LoadoutManager.getInstance();
-		Client.getInstance().setConnectionListener(this);
+
 
 		
 		//Setup loadout list
