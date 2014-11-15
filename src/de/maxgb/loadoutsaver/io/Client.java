@@ -34,15 +34,13 @@ public class Client implements IPersonaListener {
 	private final String TAG = "Client";
 	private static Client instance;
 
-	public static synchronized Client getInstance(SharedPreferences pref) {
+	public static synchronized Client getInstance() {
 		if (instance == null) {
 			instance = new Client();
 		}
-		instance.setPreferences(pref);
 		return instance;
 	}
 
-	private SharedPreferences pref;
 
 	HttpClient httpclient;
 	// Login, SessionKey & Userinfo
@@ -521,10 +519,6 @@ public class Client implements IPersonaListener {
 	}
 
 	
-	public void setPreferences(SharedPreferences pref) {
-		this.pref = pref;
-	}
-	
 	public String getPersonaName(){
 		if(persona==null||persona.personaName.equals("")){
 			return "Unknown";
@@ -571,6 +565,9 @@ public class Client implements IPersonaListener {
 	}
 	
 	
+	public boolean isLoggedIn(){
+		
+	}
 
 
 }

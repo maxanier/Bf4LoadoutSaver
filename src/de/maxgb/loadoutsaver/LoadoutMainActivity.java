@@ -1,6 +1,7 @@
 package de.maxgb.loadoutsaver;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,7 +53,7 @@ import de.maxgb.loadoutsaver.util.Loadout;
 import de.maxgb.loadoutsaver.util.RESULT;
 
 public class LoadoutMainActivity extends SherlockFragmentActivity implements
-		LoadoutNameDialog.LoadoutNameDialogListener,Client.IConnectionListener {
+		LoadoutNameDialog.LoadoutNameDialogListener {
 
 	// AsyncTask---------------------------------------------------------------------
 	/**
@@ -70,7 +71,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			if (params == null || params.length != 1) {
 				return RESULT.MISSINGPARAMETER;
 			}
-			Client client = Client.getInstance(getSharedPreferences());
+			Client client = Client.getInstance();
 
 			return client.saveCurrentLoadout(params[0]);
 		}
@@ -126,7 +127,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 				reportToAnalytics("action","save","server_error");
 			}
 			else if(result==RESULT.NOSTATS){
-				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nYour soldier ("+Client.getInstance(getSharedPreferences()).getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
+				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nYour soldier ("+Client.getInstance().getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
 				reportToAnalytics("action","save","nostats");
 			}
 			else if(result == RESULT.NOPERSONA){
@@ -152,7 +153,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		@Override
 		protected void onPreExecute() {
 			Logger.i(TAG, "Show ProgressDialog");
-			progressDialog = new ProgressDialog(context);
+			progressDialog = new ProgressDialog(getActivity());
 			progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 			progressDialog.setTitle("Saving");
 			progressDialog.setCancelable(false);
@@ -169,6 +170,23 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 	 *         Sends the given Loadout to Battlelog
 	 */
 	private class SendLoadoutTask extends AsyncTask<Loadout, Void, Integer> {
+		
+		
+		@Override
+		public void onPreExecute(){
+
+			if (sendingToast != null)
+				sendingToast.dismiss();
+
+			//new SuperActivityToast(this, SuperToast.Type.PROGRESS);
+			sendingToast = SuperActivityToast.create(getActivity(), "Sending Loadout",
+					SuperToast.Duration.EXTRA_LONG);
+
+			sendingToast.setIndeterminate(true);
+
+			sendingToast.show();
+		}
+		
 		/**
 		 * Sends the given Loadout to Battlelog
 		 * 
@@ -181,7 +199,8 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			if (params == null || params.length == 0) {
 				return RESULT.MISSINGPARAMETER;
 			}
-			Client client = Client.getInstance(getSharedPreferences());
+			Logger.i(TAG, "Sending loadout: " + params[0].toString());
+			Client client = Client.getInstance();
 
 			int saveOldLoadoutResult = client.saveCurrentLoadout(new Loadout(
 					"Old Loadout", new JSONObject(), true, true, true,Color.BLACK,""));
@@ -301,9 +320,9 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 
 	private ListView list;
 	private static final String TAG = "MainActivity";
+	private static final int LOGIN_ACTIVITY_RESULT=1;
 	private ProgressDialog progressDialog;
-
-	private Context context;
+	private HashMap<AsyncTask<Loadout,?,?>,Loadout> quequedTasks;
 	private Activity activity;
 
 	private SuperActivityToast sendingToast;
@@ -320,7 +339,14 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		Loadout loadout = new Loadout(name, new JSONObject(), w, k, v,color,"");
 
 		Logger.i(TAG, "User wants new Loadout: " + loadout.toString());
+		
 		SaveLoadoutTask task = new SaveLoadoutTask();
+		
+		if(!handleLogin()){
+			this.quequeTask(task, loadout);
+			Logger.i(TAG, "Not logged in, quequeing SaveLoadoutTask");
+			return;
+		}
 		task.execute(loadout);
 	}
 
@@ -355,8 +381,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 
 	}
 
-	@Override
-	public void loggedIn(final Client.Persona persona) {
+	private void loggedIn(final String name,final int platform) {
 		try {
 			if(activity!=null){
 				final Activity context = activity;
@@ -366,8 +391,8 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 					public void run() {
 						
 						SuperCardToast toast = SuperCardToast.create(context,
-								"Logged in with soldier: " + persona.personaName + " on "
-										+ Constants.getPlatformFromInt(persona.platform), SuperToast.Duration.LONG);
+								"Logged in with soldier: " + name + " on "
+										+ Constants.getPlatformFromInt(platform), SuperToast.Duration.LONG);
 						toast.setBackground(SuperToast.Background.GREEN);
 						toast.show();
 
@@ -379,7 +404,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			Logger.e(TAG, "Error while showing logged in Toast",e);
 			reportError(e);
 		}
-		reportToAnalytics("status","platform",""+persona.platform);
+		reportToAnalytics("status","platform",""+platform);
 
 	}
 
@@ -392,10 +417,8 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
-		// Save context for ProgressDialog
-		context = this;
-		activity=this;
+		
+		//Init Logger
 		Logger.init(Constants.DIRECTORY);
 		Logger.setDebugMode(true);
 		boolean inEmulator=Logger.inEmulator();
@@ -404,9 +427,13 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			Constants.GA_DRY_RUN=true;//Stop GA logging
 		}
 
+		
+		//Initialize LoadoutManager and Client
 		LoadoutManager loadoutManager = LoadoutManager.getInstance();
-		Client.getInstance(getSharedPreferences()).setConnectionListener(this);
+		Client.getInstance().setConnectionListener(this);
 
+		
+		//Setup loadout list
 		list = (ListView) findViewById(R.id.list);
 		final CustomArrayAdapter adapter = new CustomArrayAdapter(this,
 				R.layout.list_view_item, loadoutManager.getLoadout());
@@ -449,10 +476,14 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 				Logger.i(TAG, "Activating Loadout at position: " + position);
 				sendLoadout(LoadoutManager.getInstance().getLoadout()
 						.get(position));
-				view.startAnimation(AnimationUtils.loadAnimation(context,
+				view.startAnimation(AnimationUtils.loadAnimation(getActivity(),
 						R.anim.view_click));
 			}
 		});
+		
+		//Initialize other stuff
+		quequedTasks=new HashMap<AsyncTask<Loadout,?,?>,Loadout>();
+		
 		// Show beta informations shortly after activity creation
 		final SharedPreferences pref = getSharedPreferences();
 		final Context con = this;
@@ -471,7 +502,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 				this.getSharedPreferences(Constants.PREF_NAME, 0), this,
 				Constants.INSTRUCTION_OPTIONS);
 
-
+		//-----------------------------------------------------------
 		
 		
 	}
@@ -591,19 +622,15 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			return;
 		}
 
-		Logger.i(TAG, "Sending loadout: " + loadout.toString());
-		if (sendingToast != null)
-			sendingToast.dismiss();
-
-		new SuperActivityToast(this, SuperToast.Type.PROGRESS);
-		sendingToast = SuperActivityToast.create(this, "Sending Loadout",
-				SuperToast.Duration.EXTRA_LONG);
-
-		sendingToast.setIndeterminate(true);
-
-		sendingToast.show();
-
 		SendLoadoutTask task = new SendLoadoutTask();
+
+		if(!handleLogin()){
+			Logger.i(TAG, "Not logged in, quequeing SendLoadoutTask");
+			this.quequeTask(task, loadout);
+			return;
+		}
+		
+
 		task.execute(loadout);
 	}
 
@@ -751,39 +778,48 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		public void choosenPersona(Persona persona);
 	}
 
-	@Override
-	public void choosePersona(final ArrayList<Persona> personas,
-			final IPersonaListener listener) {
-		
-		Runnable run=new Runnable(){
-
-			@Override
-			public void run() {
-				AlertDialog d=null;
-				AlertDialog.Builder adb = new AlertDialog.Builder(activity);
-				CharSequence items[] = new CharSequence[personas.size()];
-				for(int i=0;i<personas.size();i++){
-					items[i]=personas.get(i).personaName+" on "+Constants.getPlatformFromInt(personas.get(i).platform);
-				}
-				
-				adb.setSingleChoiceItems(items, -1, new OnClickListener() {
-
-				        @Override
-				        public void onClick(DialogInterface d, int n) {
-				            listener.choosenPersona(personas.get(n));
-				            d.dismiss();
-				        }
-
-				});
-				adb.setTitle("Choose your soldier");
-				d=adb.show();
-				
-				
+	
+	
+	/**
+	 * Checks if the user is logged in, if not starts the login procedure
+	 * @return Logged in
+	 */
+	private boolean handleLogin(){
+		if(Client.getInstance().isLoggedIn()){
+			return true;
+		}
+		else{
+			Intent i= new Intent(this,LoginActivity.class);
+			this.startActivityForResult(i, LOGIN_ACTIVITY_RESULT);
+			return false;
+		}
+	}
+	
+	
+	public void onActivityResult(int requestCode,int resultCode,Intent i){
+		if(requestCode==LOGIN_ACTIVITY_RESULT){
+			if(resultCode==RESULT.OK){
+				this.loggedIn(i.getStringExtra("name"), i.getIntExtra("platform", -1));
+				this.executeQuequedTasks();
 			}
-			
-		};
-		activity.runOnUiThread(run);
-		
+		}
+	}
+	
+	protected Activity getActivity(){
+		return this;
+	}
+	
+	private void quequeTask(AsyncTask<Loadout,?,?> task,Loadout l){
+		if(task==null){
+			return;
+		}
+		quequedTasks.put(task,l);
+	}
+	
+	private void executeQuequedTasks(){
+		for(AsyncTask<Loadout,?,?> task : quequedTasks.keySet()){
+			task.execute(quequedTasks.get(task));
+		}
 	}
 
 }

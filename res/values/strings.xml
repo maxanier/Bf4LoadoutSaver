@@ -26,10 +26,14 @@
     <string name="loadout_kits">Kits (Weapons and equipment for each class)</string>
     <string name="loadout_vehicles">Vehicles</string>
     <string name="loadout_parts_explanation">Choose the loadout-parts to store</string>
+
     <color name="green">#00FF00</color>
     <color name="red">#FF0000</color>
+
     <string name="status_not_logged_in">Not logged in yet</string>
     <string name="pick_color">Pick a color</string>
     <string name="allow_mix_loadouts">Allow to mix Loadouts from different soldiers (risky)</string>
+    <string name="title_activity_login">Login</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>
