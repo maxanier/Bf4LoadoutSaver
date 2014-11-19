@@ -80,23 +80,10 @@ public class Client implements IPersonaListener {
 
 
 	public synchronized int login(String email,String password) {
-		Long tsLong = System.currentTimeMillis() / 1000;
-
-		Logger.i(TAG, "Loginvorgang gestartet");
 
 		try {
-			// Create Http-Post request
-			HttpPost httppost = new HttpPost(Constants.LOGIN_URL);
-
-			List<NameValuePair> paare = new ArrayList<NameValuePair>(4); // Post-Parameter
-			paare.add(new BasicNameValuePair("email", email));
-			paare.add(new BasicNameValuePair("password", password));
-			paare.add(new BasicNameValuePair("deviceType", "1"));
-			paare.add(new BasicNameValuePair("timestamp", tsLong.toString()));
-			httppost.setEntity(new UrlEncodedFormEntity(paare));
-			// -----------------------------------------------
-
-			HttpResponse response = httpclient.execute(httppost);
+			Logger.i(TAG, "Loginvorgang gestartet");
+			HttpResponse response = executePostRequest(Constants.LOGIN_URL,"email",email,"password",password);
 			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -106,85 +93,10 @@ public class Client implements IPersonaListener {
 				//Test String for multiple personas: String responseString = "{\"data\":{\"pushToken\":\"1404492198;5eab7a96ed028e4d61b7b1b2f5c1b1d018cac385\",\"rollouts\":[\"LIVE_SCOREBOARD\",\"SERVERBANNER_UPLOAD\",\"ESPORT_MATCHES\",\"ESPORT_MATCHES_PC\",\"SERVERBANNER_UPLOAD_PS3\",\"ESPORT_MATCHES_PS3\",\"SERVERBANNER_UPLOAD_XBOX\",\"ESPORT_MATCHES_XBOX\",\"BF3LOADOUT\",\"CLUB_EMBLEMS\",\"WARSAW_RESET_STATS\",\"USERNPS\",\"APP_PROMOTION\",\"BFH_COMMUNITY_MISSIONS\",\"BFH_MOBILE\"],\"userGameExpansions\":[],\"personas\":[{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403815068,\"firstPartyId\":\"\",\"personaId\":\"376180755\",\"personaName\":\"BlueTig3r131\",\"gamesLegacy\":\"0\",\"namespace\":\"ps3\",\"gamesJson\":\"{\\\"32\\\":\\\"10240\\\",\\\"4\\\":\\\"0\\\"}\",\"games\":{\"32\":\"10240\",\"4\":\"0\"},\"clanTag\":\"\"},{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403815068,\"firstPartyId\":\"\",\"personaId\":\"1075332762\",\"personaName\":\"Into_The_World13\",\"gamesLegacy\":\"0\",\"namespace\":\"ps3\",\"gamesJson\":\"{\\\"32\\\":\\\"10240\\\",\\\"4\\\":\\\"0\\\"}\",\"games\":{\"32\":\"10240\",\"4\":\"0\"},\"clanTag\":\"\"},{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403208816,\"firstPartyId\":\"\",\"personaId\":\"1075338761\",\"personaName\":\"blackoutidk\",\"gamesLegacy\":\"0\",\"namespace\":\"cem_ea_id\",\"gamesJson\":\"{\\\"1\\\":\\\"0\\\"}\",\"games\":{\"1\":\"0\"},\"clanTag\":\"\"}],\"clientId\":null,\"activePersonas\":{\"8192\":{\"platform\":32,\"game\":8192,\"persona\":{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403815068,\"firstPartyId\":\"\",\"personaId\":\"1075332762\",\"personaName\":\"Into_The_World13\",\"gamesLegacy\":\"0\",\"namespace\":\"ps3\",\"gamesJson\":\"{\\\"32\\\":\\\"10240\\\",\\\"4\\\":\\\"0\\\"}\",\"games\":{\"32\":10240,\"4\":0},\"clanTag\":\"\"},\"userId\":\"2955057794699152819\",\"personaId\":\"1075332762\"},\"2\":null},\"isOmahaUser\":true,\"sessionKey\":\"palst53rr6upouysy9wrhavfr54wq6wk\",\"mobileToken\":\"PApQio3PetqeUPe-H19MDhLxkcm06_505MJMHxfl2yqSMxuTI278YMsghEadgSKFMRTqdk4hRc6vVt6nXzsVksIbHNNe8JnioZ3ucuxZ-YiLJe7Yf0I5Bmkpy37MnU4kf1ywy4n2FSMrxQc2H2Dh_yG1WKAoEfzG_WZUDw0GPYU.\",\"isWarsawPremiumUser\":false,\"isWarsawUser\":true,\"user\":{\"username\":\"blackoutidk\",\"gravatarMd5\":\"7371dc42d2d9731feca519e305f89678\",\"userId\":\"2955057794699152819\",\"createdAt\":1403208815,\"presence\":{\"onlineGame\":{\"platform\":32,\"game\":2048,\"personaId\":\"1075332762\"},\"userId\":\"2955057794699152819\",\"playingMp\":{\"serverGuid\":\"3a8bfb53-b838-484a-8aec-99d32d4a836e\",\"platform\":32,\"personaId\":\"1075332762\",\"gameId\":\"720575940390419858\",\"role\":1,\"gameExpansions\":[0],\"serverName\":\"-[DICE]- BF4 TDM - Normal 140286\",\"gameMode\":\"32\",\"game\":2048,\"levelName\":\"MP_Naval\"},\"updatedAt\":1404448961,\"isPlaying\":true,\"presenceStates\":\"266\",\"isOnline\":true}}},\"success\":1}";
 				Logger.i(TAG, "Response String: " + responseString);
 
-				// Read out
-				// values------------------------------------------------------------------
-				sessionKey = null;
-				persona=null;
-				ArrayList<Persona> personas = new ArrayList<Persona>();
+				JSONObject responseJson = new JSONObject(responseString);
+				JSONObject data = responseJson.getJSONObject("data");
 				
-				try {
-					JSONObject responseJson = new JSONObject(responseString);
-					JSONObject data = responseJson.getJSONObject("data");
-
-					if (data != null) {
-
-						try {
-							sessionKey = data.getString(Constants.BJSON_SESSIONKEY);
-						} catch (JSONException e) {
-							
-
-						}
-						
-						
-						JSONArray ps=data.getJSONArray("personas");
-						for(int i=0;i< ps.length();i++){
-							JSONObject p=ps.getJSONObject(i);
-							
-							
-							JSONObject games=p.getJSONObject(Constants.BJSON_GAMES);
-							for(int j=0;j<games.names().length();j++){
-								Logger.i(TAG, "Owns game "+games.getString(games.names().getString(j)) +" on "+games.names().getString(j));
-								if(!games.getString(games.names().getString(j)).equals("0")){
-									Persona pers=new Persona();
-									pers.personaName=p.getString(Constants.BJSON_PERSONANAME);
-									pers.personaId=p.getString(Constants.BJSON_PERSONAID);
-									pers.platform=Integer.parseInt(games.names().getString(j));
-									personas.add(pers);
-								}
-							}
-							
-							
-						}
-
-						
-					} else {
-						Logger.w(TAG, "DataObject in response json is null");
-					}
-
-				} catch (JSONException e) {
-					Logger.e(TAG, "Failed to parse response to JSON",e);
-				}
-
-
-				if(sessionKey==null){
-					return RESULT.NOSESSIONKEY;
-				}
-
-				Logger.i(TAG, "Login analysis complete: SessionKey: "
-						+ sessionKey+". Found "+personas.size()+" personas: "+personas.toString());
-				
-				if(personas.size()==0){
-					return RESULT.NOPERSONA;
-				}
-				loggedInSince = System.currentTimeMillis();
-
-				if(personas.size()==1){
-					persona=personas.get(0);
-					if (conListener != null)
-						conListener.loggedIn(persona);
-					Logger.i(TAG, "Only one persona, so skipping choosing part");
-					return RESULT.OK;
-				}
-				else{
-					Logger.i(TAG, "Multiple personas, asking user to choose");
-					conListener.choosePersona(personas, this);
-					while(persona==null){
-						Thread.yield();
-					}
-					conListener.loggedIn(persona);
-					return RESULT.OK;
-				}
-
+				return processLogin(data);
 				
 
 			} else {
@@ -199,28 +111,24 @@ public class Client implements IPersonaListener {
 		} catch (IOException e) {
 			Logger.e(TAG, "IOException during login",e);
 			return RESULT.REQUESTFAILED;
+		} catch (JSONException e) {
+			Logger.e(TAG, "Failed to parse response to JSON",e);
+			return RESULT.REQUESTFAILED;
 		}
 
 	}
-
+	
+	/**
+	 * Initiates the qr login procedure. Retrieves the challenge code from battlelog
+	 * @param qrtoken The token (string at the end of the QR url)
+	 * @return Result id
+	 */
 	public synchronized int loginQR(String qrtoken){
-		Long tsLong = System.currentTimeMillis() / 1000;
-
-		Logger.i(TAG, "Loginvorgang gestartet");
-		
-		//TOKEN CHALLENGE--------------------------------------------------------------------------
-		// Create Http-Post request
-		HttpPost httppost = new HttpPost(Constants.TOKEN_CHALLENGE_URL);
 
 		try {
-			List<NameValuePair> paare = new ArrayList<NameValuePair>(4); // Post-Parameter
-			paare.add(new BasicNameValuePair("token", qrtoken));
-			paare.add(new BasicNameValuePair("deviceType", "1"));
-			paare.add(new BasicNameValuePair("timestamp", tsLong.toString()));
-			httppost.setEntity(new UrlEncodedFormEntity(paare));
-			// -----------------------------------------------
-
-			HttpResponse response = httpclient.execute(httppost);
+			
+			Logger.i(TAG, "QR Loginvorgang gestartet");
+			HttpResponse response = executePostRequest(Constants.TOKEN_CHALLENGE_URL,"token",qrtoken);
 			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -229,8 +137,12 @@ public class Client implements IPersonaListener {
 				String responseString = out.toString();
 				Logger.i(TAG, "TOKEN challenge answer: "+responseString);
 				JSONObject r=new JSONObject(responseString);
-				r.getJSONObject("data").getString("challenge");
-				Logger.i(TAG, "Challenge");
+				String code=r.getJSONObject("data").getString("challenge");
+				Logger.i(TAG, "Challenge code: "+code);
+				conListener.enterCode(code, qrtoken);
+				
+			}
+			else{
 				
 			}
 		} catch (UnsupportedEncodingException e) {
@@ -248,6 +160,132 @@ public class Client implements IPersonaListener {
 		}
 		return RESULT.OK;
 	}
+	
+	public synchronized int loginTokenChallenge(String token,String code){
+		try {
+			HttpResponse response= executePostRequest(Constants.GET_AUTHCODE_URL,"token",token,"challenge",code);
+			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				response.getEntity().writeTo(out);
+				out.close();
+				String responseString = out.toString();
+				Logger.i(TAG, "AuthCode answer: "+responseString);
+				JSONObject r=new JSONObject(responseString);
+				if(r.getInt("success")==1){
+					String authCode=r.getJSONObject("data").getString("authorizationCode");
+					Logger.i(TAG, "Retrieved auth code: "+authCode);
+					
+					HttpResponse response2=executePostRequest(Constants.FINISH_TOKEN_CHALLENGE_URL,"authorizationCode",authCode);
+					if (response2.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+						ByteArrayOutputStream out2 = new ByteArrayOutputStream();
+						response2.getEntity().writeTo(out2);
+						out2.close();
+						String responseString2 = out2.toString();
+						Logger.i(TAG, "Response String: " + responseString2);
+
+						JSONObject responseJson = new JSONObject(responseString2);
+						JSONObject data = responseJson.getJSONObject("data");
+						
+						return processLogin(data);
+					}
+					else{
+						
+					}
+				}
+			}
+			else{
+				
+			}
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return RESULT.REQUESTFAILED;
+	}
+	
+	private int processLogin(JSONObject data){
+		// Read out
+		// values------------------------------------------------------------------
+		sessionKey = null;
+		persona=null;
+		ArrayList<Persona> personas = new ArrayList<Persona>();
+		
+		try {
+			if (data != null) {
+
+				try {
+					sessionKey = data.getString(Constants.BJSON_SESSIONKEY);
+				} catch (JSONException e) {
+
+				}
+				
+				
+				JSONArray ps=data.getJSONArray("personas");
+				for(int i=0;i< ps.length();i++){
+					JSONObject p=ps.getJSONObject(i);
+					
+					
+					JSONObject games=p.getJSONObject(Constants.BJSON_GAMES);
+					for(int j=0;j<games.names().length();j++){
+						Logger.i(TAG, "Owns game "+games.getString(games.names().getString(j)) +" on "+games.names().getString(j));
+						if(!games.getString(games.names().getString(j)).equals("0")){
+							Persona pers=new Persona();
+							pers.personaName=p.getString(Constants.BJSON_PERSONANAME);
+							pers.personaId=p.getString(Constants.BJSON_PERSONAID);
+							pers.platform=Integer.parseInt(games.names().getString(j));
+							personas.add(pers);
+						}
+					}
+					
+					
+				}
+
+				
+			} else {
+				Logger.w(TAG, "DataObject in response json is null");
+			}
+
+		} catch (JSONException e) {
+			Logger.e(TAG, "Failed to parse login to JSON",e);
+		}
+
+
+		if(sessionKey==null){
+			return RESULT.NOSESSIONKEY;
+		}
+
+		Logger.i(TAG, "Login analysis complete: SessionKey: "
+				+ sessionKey+". Found "+personas.size()+" personas: "+personas.toString());
+		
+		if(personas.size()==0){
+			return RESULT.NOPERSONA;
+		}
+		loggedInSince = System.currentTimeMillis();
+
+		if(personas.size()==1){
+			persona=personas.get(0);
+			if (conListener != null)
+				conListener.loggedIn(persona);
+			Logger.i(TAG, "Only one persona, so skipping choosing part");
+			return RESULT.OK;
+		}
+		else{
+			Logger.i(TAG, "Multiple personas, asking user to choose");
+			conListener.choosePersona(personas, this);
+			while(persona==null){
+				Thread.yield();
+			}
+			conListener.loggedIn(persona);
+			return RESULT.OK;
+		}
+	}
+	
 	/**
 	 * Downloads the currently equipped Loadout and querys it in LoadoutManager.
 	 * You need to call LoadoutManager.addQuery() in UI-Thread afterwards Also
@@ -540,12 +578,15 @@ public class Client implements IPersonaListener {
 		
 		
 	}
+	
 	public interface IConnectionListener {
 		public void failedToLogin(String error);
 
 		public void loggedIn(Persona persona);
 		
 		public void choosePersona(ArrayList<Persona> personas, IPersonaListener listener);
+		
+		public void enterCode(String code,String token);
 	}
 	
 	@Override
@@ -566,6 +607,28 @@ public class Client implements IPersonaListener {
 		}
 		return true;
 		//TODO make a real check
+	}
+	
+	private HttpResponse executePostRequest(String url,String... params) throws ClientProtocolException, IOException{
+		if(params.length%2!=0){
+			Logger.e(TAG, "Post request params have to be a even count");
+			return null;
+		}
+		Long tsLong = System.currentTimeMillis() / 1000;
+
+		// Create Http-Post request
+		HttpPost httppost = new HttpPost(url);
+
+		List<NameValuePair> paare = new ArrayList<NameValuePair>(params.length/2+1); 
+		for(int i=0;i<params.length;i+=2){
+				paare.add(new BasicNameValuePair(params[i],params[i+1]));
+		}
+		paare.add(new BasicNameValuePair("deviceType", "1"));
+		paare.add(new BasicNameValuePair("timestamp", tsLong.toString()));
+		httppost.setEntity(new UrlEncodedFormEntity(paare));
+		// -----------------------------------------------
+
+		return httpclient.execute(httppost);
 	}
 
 

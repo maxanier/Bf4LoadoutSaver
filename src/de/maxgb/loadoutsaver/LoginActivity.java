@@ -21,10 +21,13 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
+import android.widget.EditText;
+import android.widget.TextView;
 
-public class LoginActivity extends SherlockFragmentActivity implements LoginCredentialsDialogListener,Client.IConnectionListener{
+public class LoginActivity extends SherlockFragmentActivity implements LoginCredentialsDialogListener,Client.IConnectionListener,EnterChallengeCodeDialog.EnterChallengeDialogListener{
 
 	private final static String TAG="LoginActivity";
 	private final int ZBAR_SCANNER_REQUEST=1;
@@ -118,7 +121,7 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 
 	/**
 	 * Starts the login procedure async and shows a progress bar
-	 * If there is one parameter, it used as qr token, if there are two they are used as login credentials
+	 * If there is one parameter, it used as qr token, if there are two they are used as login credentials, if there are three the first two are used for the token challenge
 	 * @author Max
 	 *
 	 */
@@ -136,12 +139,16 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 
 		@Override
 		protected Integer doInBackground(String... params) {
-			if(params==null||params.length>2){
+			if(params==null||params.length>3){
 				return RESULT.LOGINCREDENTIALSMISSING;
 			}
 			if(params.length==1){
 				Logger.i(TAG, "Starting qr login");
 				return Client.getInstance().loginQR(params[0]);
+			}
+			if(params.length==3){
+				Logger.i(TAG, "Starting token challenge");
+				return Client.getInstance().loginTokenChallenge(params[0], params[1]);
 			}
 			Logger.i(TAG, "Starting credentials login");
 			return Client.getInstance().login(params[0], params[1]);
@@ -206,6 +213,39 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 		    }
 		}
 	    
+	}
+
+	@Override
+	public void enterCode(final String code, final String token) {
+		final Activity activity =this;
+		Runnable run=new Runnable(){
+
+			@Override
+			public void run() {
+				EnterChallengeCodeDialog d=new EnterChallengeCodeDialog();
+				Bundle args=new Bundle();
+				args.putString("code", code);
+				args.putString("token", token);
+				d.setArguments(args);
+				d.show(getSupportFragmentManager(), "challenge_code_dialog");
+			}
+		};
+		activity.runOnUiThread(run);
+		
+		
+	}
+
+	@Override
+	public void onEnteredCode(String token, String code) {
+		LoginTask task=new LoginTask();
+		task.execute(token,code,"token");
+		
+	}
+
+	@Override
+	public void onCanceledCode() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

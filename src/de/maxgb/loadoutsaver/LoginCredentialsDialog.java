@@ -29,7 +29,7 @@ public class LoginCredentialsDialog extends DialogFragment{
 	    LayoutInflater inflater = getActivity().getLayoutInflater();
 	    // Inflate and set the layout for the dialog
 	    // Pass null as the parent view because its going in the dialog layout
-	    View view=inflater.inflate(R.layout.login_credentials_dialog, null);
+	    View view=inflater.inflate(R.layout.dialog_login_credentials, null);
 
 	    editEmail=(EditText)view.findViewById(R.id.login_dialog_email);
 	    editPassword=(EditText)view.findViewById(R.id.login_dialog_password);
