@@ -12,7 +12,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -226,7 +225,8 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 				LoadoutManager loadoutManager = LoadoutManager.getInstance();
 				JSONObject full = client.getLastFullLoadout();
 				if (full == null) {
-					return RESULT.NOFULLLOADOUT;
+					Logger.e(TAG, "Can't find last full loadout -> cant complete and send Loadout");
+					return RESULT.OTHERERROR;
 				}
 
 				if (loadout.containsKits()) {
@@ -302,7 +302,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 				showErrorDialog(res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nDo you own Battlefield 4?");
 				reportToAnalytics("action","send","no_persona");
 			}
-			else if(result == RESULT.MIXED_LOADOUTS){
+			else if(result == RESULT.MIXING_LOADOUTS){
 				showErrorDialog("You tried to mix Loadouts, this could create problems, if you want to do it anyway activate it in the settings menu.",false);
 			}
 			else {
@@ -551,49 +551,19 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		EasyTracker.getInstance(this).activityStop(this); // Stoping EasyTracker
 	}
 
-	private void reportError(Exception e) {
-		// refer to:
-		// https://developers.google.com/analytics/devguides/collection/android/v3/exceptions
-		EasyTracker easyTracker = EasyTracker.getInstance(this);
+	
 
-		// StandardExceptionParser is provided to help get meaningful Exception
-		// descriptions.
-		easyTracker.send(MapBuilder.createException(
-				new StandardExceptionParser(this, null) // Context and optional
-														// collection of package
-														// names
-														// to be used in
-														// reporting the
-														// exception.
-						.getDescription(Thread.currentThread().getName(), // The
-																			// name
-																			// of
-																			// the
-																			// thread
-																			// on
-																			// which
-																			// the
-																			// exception
-																			// occurred.
-								e), // The exception.
-				false) // False indicates a fatal exception
-				.build());
-
-	}
-
-	private void reportToAnalytics(String category, String label, String msg,
-			long value) {
-		EasyTracker tracker = EasyTracker.getInstance(this);
-
-		tracker.send(MapBuilder.createEvent(category, label, msg, value)
-				.build()); 
+	/**
+	 * Updates the LoadoutListView/Adapter, must be called after Loadoutlist
+	 * changes
+	 */
+	public void updateList() {
+		Logger.i(TAG, "UpdatingList");
+		((CustomArrayAdapter) list.getAdapter()).notifyDataSetChanged();
 	}
 	
-	private void reportToAnalytics(String category, String label, String msg) {
-		EasyTracker tracker = EasyTracker.getInstance(this);
-
-		tracker.send(MapBuilder.createEvent(category, label, msg, null)
-				.build()); 
+	public interface IPersonaListener{
+		public void choosenPersona(Persona persona);
 	}
 
 	public void sendLoadout(Loadout loadout) {
@@ -616,152 +586,6 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 
 		task.execute(loadout);
 	}
-
-	/**
-	 * Shows a Error dialog with the given message and offers if report is true a report button
-	 * @param msg
-	 * @param report whether to show a report button or not
-	 */
-	private void showErrorDialog(String msg, boolean report) {
-
-		// 1. Instantiate an AlertDialog.Builder with its constructor
-		AlertDialog.Builder builder = new AlertDialog.Builder(LoadoutMainActivity.this);
-		final String message = msg;
-		// 2. Chain together various setter methods to set the dialog
-		// characteristics
-		builder.setMessage(message)
-				.setTitle(R.string.error)
-				.setNegativeButton(R.string.ok,
-						new DialogInterface.OnClickListener() {
-
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-
-							}
-						});
-
-		if(report){
-			builder.setPositiveButton(R.string.report,
-					new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int id) {
-					showErrorReportingDialog(message);
-				}
-			});
-		}
-		// 3. Get the AlertDialog from create()
-		AlertDialog dialog = builder.create();
-
-		dialog.show();
-
-	}
-	
-	/**
-	 * Shows a Error dialog with the given message and with a report button
-	 * @param msg
-	 */
-	private void showErrorDialog(String msg){
-		showErrorDialog(msg,true);
-	}
-
-	private void showErrorReportingDialog(String msg) {
-
-		// 1. Instantiate an AlertDialog.Builder with its constructor
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		final String message = msg;
-		// 2. Chain together various setter methods to set the dialog
-		// characteristics
-		builder.setMessage(
-				"Do you want to report this error to the developer?  A logfile will be appended, which also contains your username, but no further personal information. It really helps fixing the problem! Thanks.")
-				.setTitle(R.string.report)
-				.setPositiveButton(R.string.report,
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int id) {
-								PackageInfo pInfo;
-								String version = "X";
-								try {
-									pInfo = getPackageManager().getPackageInfo(
-											getPackageName(), 0);
-									version = pInfo.versionName;
-								} catch (NameNotFoundException e) {
-
-									reportError(e);
-								}
-
-								// Send the email
-								Intent mailIntent = new Intent(
-										Intent.ACTION_SEND_MULTIPLE);
-								mailIntent.setType("text/plain");
-								mailIntent
-										.putExtra(
-												Intent.EXTRA_EMAIL,
-												new String[] { Constants.LOG_REPORT_EMAIL });
-								mailIntent.putExtra(Intent.EXTRA_SUBJECT,
-										Constants.LOG_REPORT_SUBJECT + version);
-								mailIntent.putExtra(Intent.EXTRA_TEXT,
-										"Error: " + message);
-
-								ArrayList<Uri> uris = new ArrayList<Uri>();
-								if (Logger.getLogFile() != null)
-									uris.add(Uri.fromFile(Logger.getLogFile()));
-								if (Logger.getOldLogFile() != null)
-									uris.add(Uri.fromFile(Logger
-											.getOldLogFile()));
-								if (LoadoutManager.getInstance()
-										.getLoadoutFileUri() != null)
-									uris.add(LoadoutManager.getInstance()
-											.getLoadoutFileUri());
-
-								mailIntent.putParcelableArrayListExtra(
-										Intent.EXTRA_STREAM, uris);
-
-								// Send, if possible
-								try {
-									startActivity(Intent.createChooser(
-											mailIntent, "Send mail..."));
-									reportToAnalytics("action","report","send");
-								} catch (android.content.ActivityNotFoundException ex) {
-									Toast.makeText(
-											getApplicationContext(),
-											"There are no email clients installed.",
-											Toast.LENGTH_SHORT).show();
-									reportToAnalytics("action","report","no_mail");
-								}
-							}
-						})
-				.setNegativeButton(R.string.abort,
-						new DialogInterface.OnClickListener() {
-
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-								reportToAnalytics("action","report","abort");
-
-							}
-						});
-
-		// 3. Get the AlertDialog from create()
-		AlertDialog dialog = builder.create();
-
-		dialog.show();
-	}
-
-	/**
-	 * Updates the LoadoutListView/Adapter, must be called after Loadoutlist
-	 * changes
-	 */
-	public void updateList() {
-		Logger.i(TAG, "UpdatingList");
-		((CustomArrayAdapter) list.getAdapter()).notifyDataSetChanged();
-	}
-	
-	public interface IPersonaListener{
-		public void choosenPersona(Persona persona);
-	}
-
-	
 	
 	/**
 	 * Checks if the user is logged in, if not starts the login procedure

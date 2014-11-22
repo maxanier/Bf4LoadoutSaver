@@ -29,6 +29,8 @@ import de.maxgb.loadoutsaver.LoadoutMainActivity.IPersonaListener;
 import de.maxgb.loadoutsaver.util.Constants;
 import de.maxgb.loadoutsaver.util.Loadout;
 import de.maxgb.loadoutsaver.util.RESULT;
+import de.maxgb.loadoutsaver.util.UnexpectedStuffException;
+import de.maxgb.loadoutsaver.util.UnexpectedStuffException.Location;
 
 public class Client implements IPersonaListener {
 	private final String TAG = "Client";
@@ -79,30 +81,47 @@ public class Client implements IPersonaListener {
 
 
 
-	public synchronized int login(String email,String password) {
+	public synchronized int login(String email,String password) throws UnexpectedStuffException {
 
+		String responseString=null;
 		try {
 			Logger.i(TAG, "Loginvorgang gestartet");
-			HttpResponse response = executePostRequest(Constants.LOGIN_URL,"email",email,"password",password);
+			HttpResponse response = executePostRequest(Constants.LOGIN_URL,null,"email",email,"password",password);
 			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				response.getEntity().writeTo(out);
 				out.close();
-				String responseString = out.toString();
+				responseString = out.toString();
 				//Test String for multiple personas: String responseString = "{\"data\":{\"pushToken\":\"1404492198;5eab7a96ed028e4d61b7b1b2f5c1b1d018cac385\",\"rollouts\":[\"LIVE_SCOREBOARD\",\"SERVERBANNER_UPLOAD\",\"ESPORT_MATCHES\",\"ESPORT_MATCHES_PC\",\"SERVERBANNER_UPLOAD_PS3\",\"ESPORT_MATCHES_PS3\",\"SERVERBANNER_UPLOAD_XBOX\",\"ESPORT_MATCHES_XBOX\",\"BF3LOADOUT\",\"CLUB_EMBLEMS\",\"WARSAW_RESET_STATS\",\"USERNPS\",\"APP_PROMOTION\",\"BFH_COMMUNITY_MISSIONS\",\"BFH_MOBILE\"],\"userGameExpansions\":[],\"personas\":[{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403815068,\"firstPartyId\":\"\",\"personaId\":\"376180755\",\"personaName\":\"BlueTig3r131\",\"gamesLegacy\":\"0\",\"namespace\":\"ps3\",\"gamesJson\":\"{\\\"32\\\":\\\"10240\\\",\\\"4\\\":\\\"0\\\"}\",\"games\":{\"32\":\"10240\",\"4\":\"0\"},\"clanTag\":\"\"},{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403815068,\"firstPartyId\":\"\",\"personaId\":\"1075332762\",\"personaName\":\"Into_The_World13\",\"gamesLegacy\":\"0\",\"namespace\":\"ps3\",\"gamesJson\":\"{\\\"32\\\":\\\"10240\\\",\\\"4\\\":\\\"0\\\"}\",\"games\":{\"32\":\"10240\",\"4\":\"0\"},\"clanTag\":\"\"},{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403208816,\"firstPartyId\":\"\",\"personaId\":\"1075338761\",\"personaName\":\"blackoutidk\",\"gamesLegacy\":\"0\",\"namespace\":\"cem_ea_id\",\"gamesJson\":\"{\\\"1\\\":\\\"0\\\"}\",\"games\":{\"1\":\"0\"},\"clanTag\":\"\"}],\"clientId\":null,\"activePersonas\":{\"8192\":{\"platform\":32,\"game\":8192,\"persona\":{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403815068,\"firstPartyId\":\"\",\"personaId\":\"1075332762\",\"personaName\":\"Into_The_World13\",\"gamesLegacy\":\"0\",\"namespace\":\"ps3\",\"gamesJson\":\"{\\\"32\\\":\\\"10240\\\",\\\"4\\\":\\\"0\\\"}\",\"games\":{\"32\":10240,\"4\":0},\"clanTag\":\"\"},\"userId\":\"2955057794699152819\",\"personaId\":\"1075332762\"},\"2\":null},\"isOmahaUser\":true,\"sessionKey\":\"palst53rr6upouysy9wrhavfr54wq6wk\",\"mobileToken\":\"PApQio3PetqeUPe-H19MDhLxkcm06_505MJMHxfl2yqSMxuTI278YMsghEadgSKFMRTqdk4hRc6vVt6nXzsVksIbHNNe8JnioZ3ucuxZ-YiLJe7Yf0I5Bmkpy37MnU4kf1ywy4n2FSMrxQc2H2Dh_yG1WKAoEfzG_WZUDw0GPYU.\",\"isWarsawPremiumUser\":false,\"isWarsawUser\":true,\"user\":{\"username\":\"blackoutidk\",\"gravatarMd5\":\"7371dc42d2d9731feca519e305f89678\",\"userId\":\"2955057794699152819\",\"createdAt\":1403208815,\"presence\":{\"onlineGame\":{\"platform\":32,\"game\":2048,\"personaId\":\"1075332762\"},\"userId\":\"2955057794699152819\",\"playingMp\":{\"serverGuid\":\"3a8bfb53-b838-484a-8aec-99d32d4a836e\",\"platform\":32,\"personaId\":\"1075332762\",\"gameId\":\"720575940390419858\",\"role\":1,\"gameExpansions\":[0],\"serverName\":\"-[DICE]- BF4 TDM - Normal 140286\",\"gameMode\":\"32\",\"game\":2048,\"levelName\":\"MP_Naval\"},\"updatedAt\":1404448961,\"isPlaying\":true,\"presenceStates\":\"266\",\"isOnline\":true}}},\"success\":1}";
-				Logger.i(TAG, "Response String: " + responseString);
+				//Logger.i(TAG, "Response String: " + responseString);
 
 				JSONObject responseJson = new JSONObject(responseString);
+				
+				if(responseJson.getInt("success")==0){
+					String error=null;
+					
+					if(responseJson.has("error")){
+						error=responseJson.getString("error");
+					}
+					else{
+						error=responseJson.toString();
+					}
+					
+					Logger.e(TAG, "Login request was not succesfull: "+error);
+					if(error.contains("USER_CREDENTIALS_ERROR")){
+						return RESULT.LOGINCREDENTIALSERROR;
+					}
+					return RESULT.REQUESTFAILED;
+				}
 				JSONObject data = responseJson.getJSONObject("data");
 				
 				return processLogin(data);
 				
 
 			} else {
-				if (conListener != null)
-					conListener.failedToLogin("Login request failed");
-				return RESULT.REQUESTFAILED;
+				Logger.w(TAG, "Logging http request not ok: "+response.getStatusLine().getStatusCode()+":"+response.getStatusLine().getReasonPhrase());
+				return RESULT.CONNECTING_PROBLEM;
 			}
 
 		} catch (SocketTimeoutException e) {
@@ -110,10 +129,13 @@ public class Client implements IPersonaListener {
 			return RESULT.TIMEOUT;
 		} catch (IOException e) {
 			Logger.e(TAG, "IOException during login",e);
-			return RESULT.REQUESTFAILED;
+			return RESULT.CONNECTING_PROBLEM;
 		} catch (JSONException e) {
 			Logger.e(TAG, "Failed to parse response to JSON",e);
-			return RESULT.REQUESTFAILED;
+			if(responseString!=null){
+				Logger.i(TAG, "Response: "+responseString);
+			}
+			throw new UnexpectedStuffException("Response json structure unlike expected",Location.LOGIN);
 		}
 
 	}
@@ -122,94 +144,152 @@ public class Client implements IPersonaListener {
 	 * Initiates the qr login procedure. Retrieves the challenge code from battlelog
 	 * @param qrtoken The token (string at the end of the QR url)
 	 * @return Result id
+	 * @throws UnexpectedStuffException 
 	 */
-	public synchronized int loginQR(String qrtoken){
+	public synchronized int loginQR(String qrtoken) throws UnexpectedStuffException{
 
+		String responseString=null;
 		try {
 			
 			Logger.i(TAG, "QR Loginvorgang gestartet");
-			HttpResponse response = executePostRequest(Constants.TOKEN_CHALLENGE_URL,"token",qrtoken);
+			HttpResponse response = executePostRequest(Constants.TOKEN_CHALLENGE_URL,null,"token",qrtoken);
 			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				response.getEntity().writeTo(out);
 				out.close();
-				String responseString = out.toString();
-				Logger.i(TAG, "TOKEN challenge answer: "+responseString);
-				JSONObject r=new JSONObject(responseString);
-				String code=r.getJSONObject("data").getString("challenge");
-				Logger.i(TAG, "Challenge code: "+code);
+				responseString = out.toString();
+				Logger.i(TAG, "TOKEN challenge answer: "+responseString); //TODO remove
+				JSONObject responseJson=new JSONObject(responseString);
+				
+				if(responseJson.getInt("success")==0){
+					String error=null;
+					
+					if(responseJson.has("error")){
+						error=responseJson.getString("error");
+					}
+					else{
+						error=responseJson.toString();
+					}
+					
+					Logger.e(TAG, "Login request was not succesfull: "+error);
+					return RESULT.REQUESTFAILED;
+				}
+				
+				String code=responseJson.getJSONObject("data").getString("challenge");
+				Logger.i(TAG, "Challenge code: "+code); //TODO remove
 				conListener.enterCode(code, qrtoken);
+				return RESULT.OK;
 				
 			}
 			else{
-				
+				Logger.w(TAG, "Logging http request not ok: "+response.getStatusLine().getStatusCode()+":"+response.getStatusLine().getReasonPhrase());
+				return RESULT.CONNECTING_PROBLEM;
 			}
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		return RESULT.OK;
+		catch (IOException e) {
+			Logger.e(TAG, "IOException during login",e);
+			return RESULT.CONNECTING_PROBLEM;
+		} catch (JSONException e) {
+			Logger.e(TAG, "Failed to parse response to JSON",e);
+			if(responseString!=null){
+				Logger.i(TAG, "Response: "+responseString);
+			}
+			throw new UnexpectedStuffException("Response json structure unlike expected",Location.LOGIN);
+		}
 	}
 	
-	public synchronized int loginTokenChallenge(String token,String code){
+	public synchronized int loginTokenChallenge(String token,String code) throws UnexpectedStuffException{
+		
+		String responseString=null;
+		String authCode=null;
+		String responseString2=null;
+		
 		try {
-			HttpResponse response= executePostRequest(Constants.GET_AUTHCODE_URL,"token",token,"challenge",code);
+			HttpResponse response= executePostRequest(Constants.GET_AUTHCODE_URL,null,"token",token,"challenge",code);
 			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				response.getEntity().writeTo(out);
 				out.close();
-				String responseString = out.toString();
-				Logger.i(TAG, "AuthCode answer: "+responseString);
-				JSONObject r=new JSONObject(responseString);
-				if(r.getInt("success")==1){
-					String authCode=r.getJSONObject("data").getString("authorizationCode");
-					Logger.i(TAG, "Retrieved auth code: "+authCode);
-					
-					HttpResponse response2=executePostRequest(Constants.FINISH_TOKEN_CHALLENGE_URL,"authorizationCode",authCode);
-					if (response2.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-						ByteArrayOutputStream out2 = new ByteArrayOutputStream();
-						response2.getEntity().writeTo(out2);
-						out2.close();
-						String responseString2 = out2.toString();
-						Logger.i(TAG, "Response String: " + responseString2);
-
-						JSONObject responseJson = new JSONObject(responseString2);
-						JSONObject data = responseJson.getJSONObject("data");
-						
-						return processLogin(data);
+				responseString = out.toString();
+				Logger.i(TAG, "AuthCode answer: "+responseString); //TODO remove
+				JSONObject responseJson=new JSONObject(responseString);
+				if(responseJson.getInt("success")==1){
+					authCode=responseJson.getJSONObject("data").getString("authorizationCode");
+					Logger.i(TAG, "Retrieved auth code: "+authCode); //TODO remove
+				}
+				else{
+					String error=null;
+					try {
+						error=responseJson.getString("error");
+					} catch (JSONException e) {
+						error=responseJson.toString();
 					}
-					else{
-						
-					}
+					Logger.e(TAG, "Get auth code request was not successfull: "+error);
+					return RESULT.REQUESTFAILED;
 				}
 			}
 			else{
-				
+				Logger.w(TAG, "Get authcode http request not ok: "+response.getStatusLine().getStatusCode()+":"+response.getStatusLine().getReasonPhrase());
+				return RESULT.CONNECTING_PROBLEM;
 			}
-		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Logger.e(TAG, "IOException during login",e);
+			return RESULT.CONNECTING_PROBLEM;
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Logger.e(TAG, "Failed to parse response to JSON",e);
+			if(responseString!=null){
+				Logger.i(TAG, "Response: "+responseString);
+			}
+			throw new UnexpectedStuffException("Response json structure unlike expected",Location.LOGIN);
 		}
-		return RESULT.REQUESTFAILED;
+		
+		try {
+			HttpResponse response=executePostRequest(Constants.FINISH_TOKEN_CHALLENGE_URL,"authorizationCode",authCode);
+			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				response.getEntity().writeTo(out);
+				out.close();
+				responseString2 = out.toString();
+				Logger.i(TAG, "Response String: " + responseString2); //TODO remove
+
+				JSONObject responseJson = new JSONObject(responseString2);
+				
+				if(responseJson.getInt("success")==0){
+					String error=null;
+					
+					if(responseJson.has("error")){
+						error=responseJson.getString("error");
+					}
+					else{
+						error=responseJson.toString();
+					}
+					
+					Logger.e(TAG, "Finsh Token challenge request was not succesfull: "+error);
+					return RESULT.REQUESTFAILED;
+				}
+				
+				JSONObject data = responseJson.getJSONObject("data");
+				
+				return processLogin(data);
+			}
+			else{
+				Logger.w(TAG, "FinishTokenChallenge http request not ok: "+response.getStatusLine().getStatusCode()+":"+response.getStatusLine().getReasonPhrase());
+				return RESULT.CONNECTING_PROBLEM;
+			}
+		} catch (IOException e) {
+			Logger.e(TAG, "IOException during login",e);
+			return RESULT.CONNECTING_PROBLEM;
+		} catch (JSONException e) {
+			Logger.e(TAG, "Failed to parse response to JSON",e);
+			if(responseString2!=null){
+				Logger.i(TAG, "Response: "+responseString2);
+			}
+			throw new UnexpectedStuffException("Response json structure unlike expected",Location.LOGIN);
+		}
 	}
 	
-	private int processLogin(JSONObject data){
+	private int processLogin(JSONObject data) throws UnexpectedStuffException{
 		// Read out
 		// values------------------------------------------------------------------
 		sessionKey = null;
@@ -248,16 +328,17 @@ public class Client implements IPersonaListener {
 
 				
 			} else {
-				Logger.w(TAG, "DataObject in response json is null");
+				throw new JSONException("Data json null");
 			}
 
 		} catch (JSONException e) {
 			Logger.e(TAG, "Failed to parse login to JSON",e);
+			throw new UnexpectedStuffException("Cant parse data",Location.LOGIN);
 		}
 
 
 		if(sessionKey==null){
-			return RESULT.NOSESSIONKEY;
+			throw new UnexpectedStuffException("Cant find session key",Location.LOGIN);
 		}
 
 		Logger.i(TAG, "Login analysis complete: SessionKey: "
@@ -294,28 +375,18 @@ public class Client implements IPersonaListener {
 	 * @param loadout
 	 *            Empty Loadout of the type which should be saved
 	 * @return Errorcode
+	 * @throws UnexpectedStuffException 
 	 */
-	public synchronized int saveCurrentLoadout(Loadout loadout) {
+	public synchronized int saveCurrentLoadout(Loadout loadout) throws UnexpectedStuffException {
 
 		if (sessionKey == null || sessionKey.equals("")) {
-			return RESULT.NOSESSIONKEY;
+			throw new UnexpectedStuffException("Session key is null or empty",Location.SAVING);
 		}
 
 		Long tsLong = System.currentTimeMillis() / 1000;
 
 		try {
-			// Create Http-Post request
-			HttpPost httppost = new HttpPost(Constants.GETLOADOUT_URL);
-
-			List<NameValuePair> paare = new ArrayList<NameValuePair>(4); // Post-Parameter
-			paare.add(new BasicNameValuePair("personaId", persona.personaId));
-			paare.add(new BasicNameValuePair("personaName", persona.personaName));
-			paare.add(new BasicNameValuePair("platformInt", "" + persona.platform));
-			paare.add(new BasicNameValuePair("timestamp", tsLong.toString()));
-
-			httppost.setEntity(new UrlEncodedFormEntity(paare));
-			httppost.addHeader("X-Session-Id", sessionKey);
-			HttpResponse response = httpclient.execute(httppost);
+			HttpResponse response = executePostRequest(Constants.GETLOADOUT_URL,sessionKey,"personaId",persona.personaId,"personaName",persona.personaName,"platfromInt",""+persona.platform);
 			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				response.getEntity().writeTo(out);
@@ -432,118 +503,89 @@ public class Client implements IPersonaListener {
 				return RESULT.OK;
 
 			} else {
-				Logger.w(TAG, "Loadout Request Failed with ReasonPhrase: "
-						+ response.getStatusLine().getReasonPhrase());
-				return RESULT.REQUESTFAILED;
+				Logger.w(TAG, "Get Loadout http request not ok: "+response.getStatusLine().getStatusCode()+":"+response.getStatusLine().getReasonPhrase());
+				return RESULT.CONNECTING_PROBLEM;
 			}
 
-		} catch (UnsupportedEncodingException e) {
-			Logger.e(TAG, "Failed to save Current Loadout", e);
+		}catch (IOException e) {
+			Logger.e(TAG, "IOException while getting Loadout",e);
+			return RESULT.CONNECTING_PROBLEM;
 		}
 
-		catch (ClientProtocolException e) {
-			Logger.e(TAG, "Failed to save Current Loadout", e);
-		} catch (IOException e) {
-			Logger.e(TAG, "Failed to save Current Loadout", e);
-		}
-
-		return RESULT.REQUESTFAILED;
 
 	}
 
-	public synchronized int sendLoadout(String loadout,String id) {
-
-		// Check login
-		
+	public synchronized int sendLoadout(String loadout,String id) throws UnexpectedStuffException {
 
 		if (sessionKey == null || sessionKey.equals("")) {
-			return RESULT.NOSESSIONKEY;
+			throw new UnexpectedStuffException("Session key is null or empty",Location.SENDING);
 		}
 		
 		if(!id.equals("")){
 			if(!id.equals(persona.personaId)){
 				Logger.w(TAG, "Trying to mix Loadouts");
-				return RESULT.MIXED_LOADOUTS;
+				return RESULT.MIXING_LOADOUTS;
 			}
 		}
 
 		Long tsLong = System.currentTimeMillis() / 1000;
-
-		// Create Http-Post request
-		HttpPost httppost = new HttpPost(Constants.SAVELOADOUT_URL);
-		HttpResponse response;
+		
 
 		try {
-			List<NameValuePair> paare = new ArrayList<NameValuePair>(5); // Post-Parameter
-			paare.add(new BasicNameValuePair("personaId", persona.personaId));
+			HttpResponse response = executePostRequest(Constants.SAVELOADOUT_URL,sessionKey,"personaId",persona.personaId,"personaName",persona.personaName,"platfromInt",""+persona.platform);
 
-			paare.add(new BasicNameValuePair("platformInt", "" + persona.personaId));
-			paare.add(new BasicNameValuePair("loadout", loadout));
-			paare.add(new BasicNameValuePair("timestamp", tsLong.toString()));
-			httppost.setEntity(new UrlEncodedFormEntity(paare));
-			httppost.addHeader("X-Session-Id", sessionKey);
-
-			// -----------------------------------------------
-
-			response = httpclient.execute(httppost);
-
-		} catch (ClientProtocolException e) {
-
-			Logger.e(TAG, "Error while sending Loadout", e);
-			return RESULT.REQUESTFAILED;
-		} catch (IOException e) {
-
-			Logger.e(TAG, "Error while sending Loadout", e);
-			return RESULT.REQUESTFAILED;
-		}
-		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			String responseString;
-			try {
+			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				String responseString;
 				response.getEntity().writeTo(out);
 				out.close();
 				responseString = out.toString();
-			} catch (IOException e) {
-				Logger.e(TAG, "Error while reading response", e);
-				return RESULT.REQUESTFAILED;
+				
 
-			}
+				Logger.i(TAG, "SendLoadout responseString: " + responseString); //TODO remove
 
-			Logger.i(TAG, "SendLoadout responseString: " + responseString);
-
-			JSONObject responseJson;
-			try {
-				responseJson = new JSONObject(responseString);
-				if(responseJson.getInt("success")==0){
-					Logger.w(TAG, "Repsonse without success: "+responseString);
-					if(responseJson.has("error")){
-						if(responseJson.getString("error").equals("SESSION_NOT_FOUND")){
-							Logger.w(TAG, "Session is probably expired -> relogin");
-							//Session probably expired
-							persona=null;
-							sessionKey="";
-							return sendLoadout(loadout,id);
+				JSONObject responseJson;
+				try {
+					responseJson = new JSONObject(responseString);
+					if(responseJson.getInt("success")==0){
+						Logger.w(TAG, "Repsonse without success: "+responseString);
+						if(responseJson.has("error")){
+							if(responseJson.getString("error").equals("SESSION_NOT_FOUND")){
+								Logger.w(TAG, "Session is probably expired -> relogin");
+								//Session probably expired
+								persona=null;
+								sessionKey="";
+								return sendLoadout(loadout,id);
+							}
+							else if(responseJson.getString("error").equals("nostats")){
+								//Soldier does not exist or has not played yet
+								return RESULT.NOSTATS;
+							}
 						}
-						else if(responseJson.getString("error").equals("nostats")){
-							//Soldier does not exist or has not played yet
-							return RESULT.NOSTATS;
-						}
+						
+						
+						return RESULT.REQUESTFAILED;
 					}
-					
-					
-					return RESULT.REQUESTFAILED;
+					return RESULT.OK;
+				} catch (JSONException e) {
+					Logger.e(TAG, "Failed to parse response to JSON",e);
+					if(responseString!=null){
+						Logger.i(TAG, "Response: "+responseString);
+					}
+					throw new UnexpectedStuffException("Response json structure unlike expected",Location.LOGIN);
 				}
-			} catch (JSONException e) {
-				Logger.e(TAG, "Failed parsing send Loadout result",e);
-				Logger.e(TAG, "JSONString; "+responseString);
+				
+			} else {
+				Logger.w(TAG, "Send Loadout http request not ok: "+response.getStatusLine().getStatusCode()+":"+response.getStatusLine().getReasonPhrase());
+				return RESULT.CONNECTING_PROBLEM;
 			}
-			
-		} else {
-			Logger.w(TAG, "Loadout Sending failed with ReasonPhrase: "
-					+ response.getStatusLine().getReasonPhrase());
-			return RESULT.REQUESTFAILED;
+		} catch (IOException e) {
+
+			Logger.e(TAG, "IOException while sending loadout",e);
+			return RESULT.CONNECTING_PROBLEM;
 		}
-		return RESULT.OK;
+		
+		
 
 	}
 
@@ -580,7 +622,6 @@ public class Client implements IPersonaListener {
 	}
 	
 	public interface IConnectionListener {
-		public void failedToLogin(String error);
 
 		public void loggedIn(Persona persona);
 		
@@ -609,17 +650,31 @@ public class Client implements IPersonaListener {
 		//TODO make a real check
 	}
 	
-	private HttpResponse executePostRequest(String url,String... params) throws ClientProtocolException, IOException{
+	/**
+	 * Executes a standard HttpPostRequest, always includes devicetype and timestamp
+	 * @param url Url request is send to.
+	 * @param sessionkey SessionKey, null if not available yet
+	 * @param params Parameter pairs, list of key, value
+	 * @return HttpResponse
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	private HttpResponse executePostRequest(String url,String sessionkey,String... params) throws ClientProtocolException, IOException{
 		if(params.length%2!=0){
 			Logger.e(TAG, "Post request params have to be a even count");
 			return null;
 		}
+
 		Long tsLong = System.currentTimeMillis() / 1000;
 
 		// Create Http-Post request
 		HttpPost httppost = new HttpPost(url);
 
-		List<NameValuePair> paare = new ArrayList<NameValuePair>(params.length/2+1); 
+		if(sessionkey!=null){
+			httppost.addHeader("X-Session-Id", sessionkey);
+		}
+		
+		List<NameValuePair> paare = new ArrayList<NameValuePair>(params.length/2+2); 
 		for(int i=0;i<params.length;i+=2){
 				paare.add(new BasicNameValuePair(params[i],params[i+1]));
 		}

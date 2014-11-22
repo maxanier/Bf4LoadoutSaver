@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.dm.zbar.android.scanner.ZBarConstants;
 import com.dm.zbar.android.scanner.ZBarScannerActivity;
+import com.google.analytics.tracking.android.EasyTracker;
+import com.google.analytics.tracking.android.GoogleAnalytics;
 
 import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.LoadoutMainActivity.IPersonaListener;
@@ -13,6 +15,8 @@ import de.maxgb.loadoutsaver.io.Client;
 import de.maxgb.loadoutsaver.io.Client.Persona;
 import de.maxgb.loadoutsaver.util.Constants;
 import de.maxgb.loadoutsaver.util.RESULT;
+import de.maxgb.loadoutsaver.util.UnexpectedStuffException;
+import de.maxgb.loadoutsaver.util.UnexpectedStuffException.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
@@ -103,12 +107,6 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 	}
 
 	@Override
-	public void failedToLogin(String error) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void loggedIn(Persona persona) {
 		Intent i=new Intent();
 		i.putExtra("name", persona.personaName);
@@ -139,19 +137,24 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 
 		@Override
 		protected Integer doInBackground(String... params) {
-			if(params==null||params.length>3){
-				return RESULT.LOGINCREDENTIALSMISSING;
+			try {
+				if(params==null||params.length>3){
+					throw new UnexpectedStuffException("The params count for the Logintask is wrong",Location.LOGIN);
+				}
+				if(params.length==1){
+					Logger.i(TAG, "Starting qr login");
+					return Client.getInstance().loginQR(params[0]);
+				}
+				if(params.length==3){
+					Logger.i(TAG, "Starting token challenge");
+					return Client.getInstance().loginTokenChallenge(params[0], params[1]);
+				}
+				Logger.i(TAG, "Starting credentials login");
+				return Client.getInstance().login(params[0], params[1]);
+			} catch (UnexpectedStuffException e) {
+				Logger.e(TAG, e.toString());
+				return RESULT.OTHERERROR;
 			}
-			if(params.length==1){
-				Logger.i(TAG, "Starting qr login");
-				return Client.getInstance().loginQR(params[0]);
-			}
-			if(params.length==3){
-				Logger.i(TAG, "Starting token challenge");
-				return Client.getInstance().loginTokenChallenge(params[0], params[1]);
-			}
-			Logger.i(TAG, "Starting credentials login");
-			return Client.getInstance().login(params[0], params[1]);
 		}
 		
 		@Override
@@ -246,6 +249,23 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 	public void onCanceledCode() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	@Override
+	public void onStart() {
+		super.onStart();
+		GoogleAnalytics mGA = GoogleAnalytics.getInstance(this);
+
+		mGA.setDryRun(Constants.GA_DRY_RUN);
+		EasyTracker.getInstance(this).activityStart(this); // Starting
+															// EasyTracker
+
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+		EasyTracker.getInstance(this).activityStop(this); // Stoping EasyTracker
 	}
 
 }
