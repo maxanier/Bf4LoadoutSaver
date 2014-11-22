@@ -1,6 +1,9 @@
-package de.maxgb.loadoutsaver;
+package de.maxgb.loadoutsaver.dialogs;
 
-import de.maxgb.loadoutsaver.LoginCredentialsDialog.LoginCredentialsDialogListener;
+import de.maxgb.loadoutsaver.R;
+import de.maxgb.loadoutsaver.R.id;
+import de.maxgb.loadoutsaver.R.layout;
+import de.maxgb.loadoutsaver.dialogs.LoginCredentialsDialog.LoginCredentialsDialogListener;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;

@@ -1,6 +1,9 @@
-package de.maxgb.loadoutsaver;
+package de.maxgb.loadoutsaver.dialogs;
 
 import de.maxgb.android.util.Logger;
+import de.maxgb.loadoutsaver.R;
+import de.maxgb.loadoutsaver.R.id;
+import de.maxgb.loadoutsaver.R.layout;
 import afzkl.development.colorpickerview.dialog.ColorPickerDialog;
 import afzkl.development.colorpickerview.view.ColorPanelView;
 import android.app.Activity;

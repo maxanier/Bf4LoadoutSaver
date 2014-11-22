@@ -44,12 +44,14 @@ import com.google.analytics.tracking.android.StandardExceptionParser;
 
 import de.maxgb.android.util.InfoBox;
 import de.maxgb.android.util.Logger;
+import de.maxgb.loadoutsaver.dialogs.LoadoutNameDialog;
 import de.maxgb.loadoutsaver.io.Client;
 import de.maxgb.loadoutsaver.io.LoadoutManager;
 import de.maxgb.loadoutsaver.io.Client.Persona;
 import de.maxgb.loadoutsaver.util.Constants;
 import de.maxgb.loadoutsaver.util.Loadout;
 import de.maxgb.loadoutsaver.util.RESULT;
+import de.maxgb.loadoutsaver.util.UnexpectedStuffException;
 
 public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		LoadoutNameDialog.LoadoutNameDialogListener {
@@ -68,11 +70,17 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		@Override
 		protected Integer doInBackground(Loadout... params) {
 			if (params == null || params.length != 1) {
-				return RESULT.MISSINGPARAMETER;
+				Logger.e(TAG, "Wrong param count at SaveLoadoutTask");
+				return RESULT.OTHERERROR;
 			}
 			Client client = Client.getInstance();
 
-			return client.saveCurrentLoadout(params[0]);
+			try {
+				return client.saveCurrentLoadout(params[0]);
+			} catch (UnexpectedStuffException e) {
+				Logger.e(TAG, e.toString());
+				return RESULT.OTHERERROR;
+			}
 		}
 
 		@Override
@@ -83,9 +91,10 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 					progressDialog.dismiss();
 				}
 			} catch (IllegalArgumentException e) {
-				reportError(e);
+				ErrorHandler.reportError(LoadoutMainActivity.this,e);
 			}
 			Resources res = getResources();
+			Context c=LoadoutMainActivity.this;
 
 			if (result == RESULT.OK) {
 				Logger.i(TAG, "Succesfully saved Loadout");
@@ -95,49 +104,25 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 						getApplicationContext(),
 						res.getString(R.string.message_successfully_saved_loadout),
 						Constants.TOAST_DURATION).show();
-				reportToAnalytics("action","save","success");
-			} else if (result == RESULT.LOGINCREDENTIALSMISSING) {
-				showErrorDialog(res
-						.getString(R.string.message_failed_to_save_loadout)
-						+ " "
-						+ result
-						+ ".\nPlease enter your battlelog login credentials in the options menu",false);
-				reportToAnalytics("action","save","credentials_missing");
-			} else if (result == RESULT.NOSESSIONKEY) {
-				showErrorDialog(res
-						.getString(R.string.message_failed_to_save_loadout)
-						+ " "
-						+ result
-						+ ".\nProbably failed to login, please check your Login information");
-				reportToAnalytics("action","save","credentials_wrong");
-			} else if (result == RESULT.TIMEOUT) {
-				showErrorDialog(res
-						.getString(R.string.message_failed_to_save_loadout)
-						+ " "
-						+ result
-						+ ".\nServer Timeout. Either the server or your internet is too slow.\nTry again later");
-				reportToAnalytics("action","save","timeout");
-			} else if (result == RESULT.INTERNALSERVERERROR) {
-				showErrorDialog(res
-						.getString(R.string.message_failed_to_save_loadout)
-						+ " "
-						+ result
-						+ ".\nBattlelog probably changed something on their servers, please report this problem to get it fixed");
-				reportToAnalytics("action","save","server_error");
+				ErrorHandler.reportToAnalytics(c,"action","save","success");
+			} 
+			else{
+				String msg=RESULT.getDescription(result);
+				if(msg!=null){
+					ErrorHandler.showErrorDialog(c, res.getString(R.string.message_failed_to_save_loadout)+ " "+result+".\n"+msg,RESULT.shouldBeReportable(result));
+				}
+				else if(result==RESULT.NOSTATS){
+					ErrorHandler.showErrorDialog(c,res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nYour soldier ("+Client.getInstance().getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
+					ErrorHandler.reportToAnalytics(c,"action","save","nostats");
+				}
+				else {
+					ErrorHandler.showErrorDialog(c,res
+							.getString(R.string.message_failed_to_save_loadout)
+							+ " " + result);
+					ErrorHandler.reportToAnalytics(c,"action","save","other_error");
+				}
 			}
-			else if(result==RESULT.NOSTATS){
-				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nYour soldier ("+Client.getInstance().getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
-				reportToAnalytics("action","save","nostats");
-			}
-			else if(result == RESULT.NOPERSONA){
-				showErrorDialog(res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nDo you own Battlefield 4?");
-				reportToAnalytics("action","save","no_platformid");
-			} else {
-				showErrorDialog(res
-						.getString(R.string.message_failed_to_save_loadout)
-						+ " " + result);
-				reportToAnalytics("action","save","other_error");
-			}
+			
 
 			
 		}
@@ -196,13 +181,20 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		@Override
 		protected Integer doInBackground(Loadout... params) {
 			if (params == null || params.length == 0) {
-				return RESULT.MISSINGPARAMETER;
+				Logger.e(TAG, "Wrong param count at SaveLoadoutTask");
+				return RESULT.OTHERERROR;
 			}
 			Logger.i(TAG, "Sending loadout: " + params[0].toString());
 			Client client = Client.getInstance();
 
-			int saveOldLoadoutResult = client.saveCurrentLoadout(new Loadout(
-					"Old Loadout", new JSONObject(), true, true, true,Color.BLACK,""));
+			int saveOldLoadoutResult=0;
+			try {
+				saveOldLoadoutResult = client.saveCurrentLoadout(new Loadout(
+						"Old Loadout", new JSONObject(), true, true, true,Color.BLACK,""));
+			} catch (UnexpectedStuffException e1) {
+				Logger.e(TAG, e1.toString());
+				return RESULT.OTHERERROR;
+			}
 			if (saveOldLoadoutResult != RESULT.OK) {
 				Logger.w(TAG, "Failed to save old Loadout");
 				return saveOldLoadoutResult;
@@ -251,7 +243,10 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			} catch (JSONException e) {
 				Logger.e(TAG,
 						"Error while putting Loadout together for sending", e);
-				return RESULT.PARSINGERROR;
+				return RESULT.OTHERERROR;
+			} catch (UnexpectedStuffException e) {
+				Logger.e(TAG, e.toString());
+				return RESULT.OTHERERROR;
 			}
 
 		}
@@ -262,57 +257,30 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			if (sendingToast != null)
 				sendingToast.dismiss();
 			Resources res = getResources();
-
+			Context c=LoadoutMainActivity.this;
 			if (result == RESULT.OK) {
 				SuperToast
 						.create(getApplication(),
 								res.getString(R.string.message_successfully_sent_loadout),
 								SuperToast.Duration.MEDIUM).show();
-				reportToAnalytics("action","send","success");
-			} else if (result == RESULT.LOGINCREDENTIALSMISSING) {
-				showErrorDialog(res
-						.getString(R.string.message_failed_to_send_loadout)
-						+ " "
-						+ result
-						+ ".\nPlease enter your battlelog login credentials in the options menu",false);
-				reportToAnalytics("action","send","credentials_missing");
-			} else if (result == RESULT.NOSESSIONKEY) {
-				showErrorDialog(res
-						.getString(R.string.message_failed_to_send_loadout)
-						+ " "
-						+ result
-						+ ".\nProbably failed to login, please check your Login information");
-				reportToAnalytics("action","send","credentials_wrong");
-			} else if (result == RESULT.TIMEOUT) {
-				showErrorDialog(res
-						.getString(R.string.message_failed_to_send_loadout)
-						+ " "
-						+ result
-						+ ".\nServer Timeout. Either the server or your internet is too slow\nTry again later");
-				reportToAnalytics("action","send","timeout");
-			} else if (result == RESULT.INTERNALSERVERERROR) {
-				showErrorDialog(res
-						.getString(R.string.message_failed_to_send_loadout)
-						+ " "
-						+ result
-						+ ".\nBattlelog probably changed something on their servers, please report this problem to get it fixed");
-				reportToAnalytics("action","send","server_error");
+				ErrorHandler.reportToAnalytics(c,"action","send","success");
+			} 
+			else{
+				String msg=RESULT.getDescription(result);
+				if(msg!=null){
+					ErrorHandler.showErrorDialog(c, res.getString(R.string.message_failed_to_send_loadout)+ " "+result+".\n"+msg,RESULT.shouldBeReportable(result));
+				}
+				else if(result==RESULT.NOSTATS){
+					ErrorHandler.showErrorDialog(c,res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nYour soldier ("+Client.getInstance().getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
+					ErrorHandler.reportToAnalytics(c,"action","send","nostats");
+				}
+				else {
+					ErrorHandler.showErrorDialog(c,res
+							.getString(R.string.message_failed_to_send_loadout)
+							+ " " + result);
+					ErrorHandler.reportToAnalytics(c,"action","send","unknown_error");
+				}
 			}
-			else if(result == RESULT.NOPERSONA){
-				showErrorDialog(res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nDo you own Battlefield 4?");
-				reportToAnalytics("action","send","no_persona");
-			}
-			else if(result == RESULT.MIXING_LOADOUTS){
-				showErrorDialog("You tried to mix Loadouts, this could create problems, if you want to do it anyway activate it in the settings menu.",false);
-			}
-			else {
-			
-				showErrorDialog(res
-						.getString(R.string.message_failed_to_send_loadout)
-						+ " " + result);
-				reportToAnalytics("action","send","other_error");
-			}
-			
 		
 		}
 
@@ -385,9 +353,9 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			}
 		} catch (Exception e) {
 			Logger.e(TAG, "Error while showing logged in Toast",e);
-			reportError(e);
+			ErrorHandler.reportError(this,e);
 		}
-		reportToAnalytics("status","platform",""+platform);
+		ErrorHandler.reportToAnalytics(this,"status","platform",""+platform);
 
 	}
 

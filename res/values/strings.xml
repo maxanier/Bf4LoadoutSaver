@@ -8,6 +8,7 @@
     <string name="message_failed_to_save_loadout">Failed to save Loadout with Code: </string>
     <string name="message_successfully_sent_loadout">Successfully sent Loadout</string>
     <string name="message_failed_to_send_loadout">Failed to send Loadout with Code: </string>
+    <string name="message_failed_to_login">Failed to login with Code: </string>
     <string name="loadoutNameHint">Name for the current Loadout</string>
     <string name="wholeLoadout">All</string>
     <string name="infantryOnly">Infantry</string>

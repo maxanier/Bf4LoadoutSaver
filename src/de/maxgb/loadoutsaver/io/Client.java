@@ -489,7 +489,7 @@ public class Client implements IPersonaListener {
 					loadout.setLoadout(finishedLoadout);
 				} catch (JSONException e) {
 					Logger.e(TAG, "Failed to add parts to finished Loadout", e);
-					return RESULT.FAILEDTOSAVE;
+					return RESULT.OTHERERROR;
 				}
 
 				LoadoutManager.getInstance().queryLoadout(loadout);

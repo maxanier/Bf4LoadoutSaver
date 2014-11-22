@@ -10,7 +10,9 @@ import com.google.analytics.tracking.android.GoogleAnalytics;
 
 import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.LoadoutMainActivity.IPersonaListener;
-import de.maxgb.loadoutsaver.LoginCredentialsDialog.LoginCredentialsDialogListener;
+import de.maxgb.loadoutsaver.dialogs.EnterChallengeCodeDialog;
+import de.maxgb.loadoutsaver.dialogs.LoginCredentialsDialog;
+import de.maxgb.loadoutsaver.dialogs.LoginCredentialsDialog.LoginCredentialsDialogListener;
 import de.maxgb.loadoutsaver.io.Client;
 import de.maxgb.loadoutsaver.io.Client.Persona;
 import de.maxgb.loadoutsaver.util.Constants;
@@ -22,9 +24,11 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.content.res.Resources;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -160,42 +164,24 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 		@Override
 		public void onPostExecute(Integer result){
 			progressDialog.dismiss();
+			Resources res = getResources();
+			Context c=LoginActivity.this;
 			if(result!=RESULT.OK){
-				showErrorDialog("Error code:"+result);
+				String msg=RESULT.getDescription(result);
+				if(msg!=null){
+					ErrorHandler.showErrorDialog(c, res.getString(R.string.message_failed_to_login)+ " "+result+".\n"+msg,RESULT.shouldBeReportable(result));
+				}
+				else {
+					ErrorHandler.showErrorDialog(c,res
+							.getString(R.string.message_failed_to_login)
+							+ " " + result);
+					ErrorHandler.reportToAnalytics(c,"action","login","unknown_error");
+				}
 			}
 		}
 		
 	}
 	
-	/**
-	 * Shows a error dialog
-	 * @param msg
-	 */
-	private void showErrorDialog(String msg) {
-
-		// 1. Instantiate an AlertDialog.Builder with its constructor
-		AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
-		final String message = msg;
-		// 2. Chain together various setter methods to set the dialog
-		// characteristics
-		builder.setMessage(message)
-				.setTitle(R.string.error)
-				.setNegativeButton(R.string.ok,
-						new DialogInterface.OnClickListener() {
-
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-
-							}
-						});
-
-		// 3. Get the AlertDialog from create()
-		AlertDialog dialog = builder.create();
-
-		dialog.show();
-
-	}
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data)
@@ -205,7 +191,7 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 		    {
 				String url=data.getStringExtra(ZBarConstants.SCAN_RESULT);
 				if(!url.startsWith("http://battlelog.com/app?")){
-					showErrorDialog("You have to scan the code from the battlelog ingame");
+					ErrorHandler.showErrorDialog(this,"You have to scan the code from the battlelog ingame",false);
 					return;
 				}
 				String token=url.substring(25);

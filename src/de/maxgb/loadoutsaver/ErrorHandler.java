@@ -22,7 +22,7 @@ import de.maxgb.loadoutsaver.util.Loadout;
 
 public class ErrorHandler {
 
-	private static void reportError(Context c,Exception e) {
+	public static void reportError(Context c,Exception e) {
 		// refer to:
 		// https://developers.google.com/analytics/devguides/collection/android/v3/exceptions
 		EasyTracker easyTracker = EasyTracker.getInstance(c);
@@ -52,7 +52,7 @@ public class ErrorHandler {
 
 	}
 
-	private static void reportToAnalytics(Context c,String category, String label, String msg,
+	public static void reportToAnalytics(Context c,String category, String label, String msg,
 			long value) {
 		EasyTracker tracker = EasyTracker.getInstance(c);
 
@@ -60,7 +60,7 @@ public class ErrorHandler {
 				.build()); 
 	}
 	
-	private static void reportToAnalytics(Context c, String category, String label, String msg) {
+	public static void reportToAnalytics(Context c, String category, String label, String msg) {
 		EasyTracker tracker = EasyTracker.getInstance(c);
 
 		tracker.send(MapBuilder.createEvent(category, label, msg, null)
@@ -74,7 +74,7 @@ public class ErrorHandler {
 	 * @param msg
 	 * @param report whether to show a report button or not
 	 */
-	private static void showErrorDialog(final Context c,String msg, boolean report) {
+	public static void showErrorDialog(final Context c,String msg, boolean report) {
 
 		// 1. Instantiate an AlertDialog.Builder with its constructor
 		AlertDialog.Builder builder = new AlertDialog.Builder(c);
@@ -113,11 +113,11 @@ public class ErrorHandler {
 	 * Shows a Error dialog with the given message and with a report button
 	 * @param msg
 	 */
-	private static void showErrorDialog(Context c,String msg){
+	public static void showErrorDialog(Context c,String msg){
 		showErrorDialog(c,msg,true);
 	}
 
-	private static void showErrorReportingDialog(final Context c,String msg) {
+	public static void showErrorReportingDialog(final Context c,String msg) {
 
 		// 1. Instantiate an AlertDialog.Builder with its constructor
 		AlertDialog.Builder builder = new AlertDialog.Builder(c);

@@ -1,5 +1,8 @@
-package de.maxgb.loadoutsaver;
+package de.maxgb.loadoutsaver.dialogs;
 
+import de.maxgb.loadoutsaver.R;
+import de.maxgb.loadoutsaver.R.id;
+import de.maxgb.loadoutsaver.R.layout;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
