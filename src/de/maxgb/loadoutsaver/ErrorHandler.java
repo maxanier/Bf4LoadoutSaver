@@ -173,13 +173,11 @@ public class ErrorHandler {
 								try {
 									c.startActivity(Intent.createChooser(
 											mailIntent, "Send mail..."));
-									reportToAnalytics(c,"action","report","send");
 								} catch (android.content.ActivityNotFoundException ex) {
 									Toast.makeText(
 											c.getApplicationContext(),
 											"There are no email clients installed.",
 											Toast.LENGTH_SHORT).show();
-									reportToAnalytics(c,"action","report","no_mail");
 								}
 							}
 						})

@@ -122,6 +122,6 @@ public class OptionsActivity extends Activity {
 		Logger.i(TAG, "ResetLogin");
 		Client.getInstance().resetLogin();
 		getSharedPreferences(Constants.PREF_NAME,0).edit().remove(Constants.EMAIL_KEY).remove(Constants.PASSWORD_KEY).remove(Constants.MOBILE_TOKEN_KEY).remove(Constants.USER_ID).commit();
-		Toast.makeText(this, "Login reseted", Toast.LENGTH_SHORT).show();;
+		Toast.makeText(this, "Login reset", Toast.LENGTH_SHORT).show();;
 	}
 }

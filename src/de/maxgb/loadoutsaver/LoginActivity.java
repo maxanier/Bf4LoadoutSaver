@@ -3,11 +3,15 @@ package de.maxgb.loadoutsaver;
 import java.util.ArrayList;
 
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 import com.dm.zbar.android.scanner.ZBarConstants;
 import com.dm.zbar.android.scanner.ZBarScannerActivity;
 import com.google.analytics.tracking.android.EasyTracker;
 import com.google.analytics.tracking.android.GoogleAnalytics;
 
+import de.maxgb.android.util.InfoBox;
 import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.LoadoutMainActivity.IPersonaListener;
 import de.maxgb.loadoutsaver.dialogs.EnterChallengeCodeDialog;
@@ -55,6 +59,29 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 			ReLoginTask task=new ReLoginTask();
 			task.execute(mobileToken,userId);
 		}
+		
+		InfoBox.showInstructionBox(
+				this.getSharedPreferences(Constants.PREF_NAME, 0), this,
+				Constants.INSTRUCTION_LOGIN);
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getSupportMenuInflater();
+		inflater.inflate(R.menu.login_activity_actions, menu);
+
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.action_login_help:
+			InfoBox.showInstructionBox(null, this, Constants.INSTRUCTION_LOGIN);
+		default:
+			break;
+		}
+		return true;
 	}
 	
 	public void loginCredentials(View v){
@@ -188,7 +215,6 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 					ErrorHandler.showErrorDialog(c,res
 							.getString(R.string.message_failed_to_login)
 							+ " " + result);
-					ErrorHandler.reportToAnalytics(c,"action","login","unknown_error");
 				}
 			}
 		}

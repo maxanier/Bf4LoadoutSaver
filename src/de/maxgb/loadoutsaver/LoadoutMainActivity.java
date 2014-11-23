@@ -104,7 +104,6 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 						getApplicationContext(),
 						res.getString(R.string.message_successfully_saved_loadout),
 						Constants.TOAST_DURATION).show();
-				ErrorHandler.reportToAnalytics(c,"action","save","success");
 			} 
 			else{
 				String msg=RESULT.getDescription(result);
@@ -113,7 +112,6 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 				}
 				else if(result==RESULT.NOSTATS){
 					ErrorHandler.showErrorDialog(c,res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\n\nYour soldier ("+Client.getInstance().getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
-					ErrorHandler.reportToAnalytics(c,"action","save","nostats");
 				}
 				else if(result==RESULT.SESSION_EXPIRED){
 					startLoginActivity(false);
@@ -122,7 +120,6 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 					ErrorHandler.showErrorDialog(c,res
 							.getString(R.string.message_failed_to_save_loadout)
 							+ " " + result);
-					ErrorHandler.reportToAnalytics(c,"action","save","other_error");
 				}
 			}
 			
@@ -266,7 +263,6 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 						.create(getApplication(),
 								res.getString(R.string.message_successfully_sent_loadout),
 								SuperToast.Duration.MEDIUM).show();
-				ErrorHandler.reportToAnalytics(c,"action","send","success");
 			} 
 			else{
 				String msg=RESULT.getDescription(result);
@@ -278,13 +274,11 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 				}
 				else if(result==RESULT.NOSTATS){
 					ErrorHandler.showErrorDialog(c,res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\n\nYour soldier ("+Client.getInstance().getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
-					ErrorHandler.reportToAnalytics(c,"action","send","nostats");
 				}
 				else {
 					ErrorHandler.showErrorDialog(c,res
 							.getString(R.string.message_failed_to_send_loadout)
 							+ " " + result);
-					ErrorHandler.reportToAnalytics(c,"action","send","unknown_error");
 				}
 			}
 		
@@ -357,7 +351,6 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			Logger.e(TAG, "Error while showing logged in Toast",e);
 			ErrorHandler.reportError(this,e);
 		}
-		ErrorHandler.reportToAnalytics(this,"status","platform",""+platform);
 
 	}
 
@@ -456,7 +449,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 
 		InfoBox.showInstructionBox(
 				this.getSharedPreferences(Constants.PREF_NAME, 0), this,
-				Constants.INSTRUCTION_OPTIONS);
+				Constants.INSTRUCTION_MAIN);
 
 		//-----------------------------------------------------------
 		
@@ -481,6 +474,8 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			break;
 		case R.id.action_newLoadout:
 			newLoadout();
+		case R.id.action_main_help:
+			InfoBox.showInstructionBox(null, this, Constants.INSTRUCTION_MAIN);
 		default:
 			break;
 		}
