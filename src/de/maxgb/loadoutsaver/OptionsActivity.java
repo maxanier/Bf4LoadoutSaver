@@ -19,13 +19,12 @@ import com.google.analytics.tracking.android.EasyTracker;
 import com.google.analytics.tracking.android.MapBuilder;
 
 import de.maxgb.android.util.Logger;
+import de.maxgb.loadoutsaver.io.Client;
 import de.maxgb.loadoutsaver.io.LoadoutManager;
 import de.maxgb.loadoutsaver.util.Constants;
 
 public class OptionsActivity extends Activity {
 	private static final String TAG = "Options";
-	private TextView email;
-	private TextView password;
 	private CheckBox analyse;
 	private CheckBox screenLock;
 	private CheckBox mixLoadouts;
@@ -77,9 +76,6 @@ public class OptionsActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_options);
-
-		email = (TextView) findViewById(R.id.edit_email);
-		password = (TextView) findViewById(R.id.edit_password);
 		analyse = (CheckBox) findViewById(R.id.checkBox_analyse);
 		screenLock = (CheckBox) findViewById(R.id.checkBox_screenlock);
 		mixLoadouts = (CheckBox) findViewById(R.id.checkBox_mix_loadouts);
@@ -87,11 +83,6 @@ public class OptionsActivity extends Activity {
 		SharedPreferences prefs = getSharedPreferences(Constants.PREF_NAME, 0);
 
 		// Load Settings
-		String oldEmail = prefs.getString(Constants.EMAIL_KEY, "");
-		String oldPassword = prefs.getString(Constants.PASSWORD_KEY, "");
-
-		email.setText(oldEmail);
-		password.setText(oldPassword);
 		analyse.setChecked(prefs.getBoolean(Constants.ANALYSE_LOADOUT_KEY,
 				false));
 		screenLock.setChecked(prefs.getBoolean(Constants.KEEP_SCREEN_ON_KEY,
@@ -116,23 +107,9 @@ public class OptionsActivity extends Activity {
 		
 		Logger.i(TAG, "Saving");
 		SharedPreferences prefs = getSharedPreferences(Constants.PREF_NAME, 0);
-		
-		if(!email.getText().toString().trim().equals("")&&!password.getText().toString().equals("")){
-			if(!email.getText().toString().trim().equals(prefs.getString(Constants.EMAIL_KEY,""))||!password.getText().toString().equals(prefs.getString(Constants.PASSWORD_KEY, ""))){
-				if(prefs.getString(Constants.EMAIL_KEY, "asdf").equals("asdf")&&prefs.getString(Constants.PASSWORD_KEY, "asdf").equals("asdf")){
-					reportToAnalytics("status","credentials","first_entered");
-				}
-				else{
-					reportToAnalytics("status","credentials","changed");
-				}
-			}
-		}
+
 		
 		SharedPreferences.Editor editor = prefs.edit();
-
-		editor.putString(Constants.EMAIL_KEY, email.getText().toString().trim());
-		editor.putString(Constants.PASSWORD_KEY, password.getText().toString()
-				.trim());
 		editor.putBoolean(Constants.ANALYSE_LOADOUT_KEY, analyse.isChecked());
 		editor.putBoolean(Constants.KEEP_SCREEN_ON_KEY, screenLock.isChecked());
 		editor.putBoolean(Constants.MIX_LOADOUTS_KEY, mixLoadouts.isChecked());
@@ -141,10 +118,10 @@ public class OptionsActivity extends Activity {
 
 	}
 	
-	private void reportToAnalytics(String category, String label, String msg) {
-		EasyTracker tracker = EasyTracker.getInstance(this);
-
-		tracker.send(MapBuilder.createEvent(category, label, msg, null)
-				.build()); // TODO test if it works
+	public void resetLogin(View v){
+		Logger.i(TAG, "ResetLogin");
+		Client.getInstance().resetLogin();
+		getSharedPreferences(Constants.PREF_NAME,0).edit().remove(Constants.EMAIL_KEY).remove(Constants.PASSWORD_KEY).remove(Constants.MOBILE_TOKEN_KEY).remove(Constants.USER_ID).commit();
+		Toast.makeText(this, "Login reseted", Toast.LENGTH_SHORT).show();;
 	}
 }

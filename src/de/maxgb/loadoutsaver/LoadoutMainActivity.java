@@ -109,11 +109,14 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			else{
 				String msg=RESULT.getDescription(result);
 				if(msg!=null){
-					ErrorHandler.showErrorDialog(c, res.getString(R.string.message_failed_to_save_loadout)+ " "+result+".\n"+msg,RESULT.shouldBeReportable(result));
+					ErrorHandler.showErrorDialog(c, res.getString(R.string.message_failed_to_save_loadout)+ " "+result+".\n\n"+msg,RESULT.shouldBeReportable(result));
 				}
 				else if(result==RESULT.NOSTATS){
-					ErrorHandler.showErrorDialog(c,res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\nYour soldier ("+Client.getInstance().getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
+					ErrorHandler.showErrorDialog(c,res.getString(R.string.message_failed_to_save_loadout)+" "+result+".\n\nYour soldier ("+Client.getInstance().getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
 					ErrorHandler.reportToAnalytics(c,"action","save","nostats");
+				}
+				else if(result==RESULT.SESSION_EXPIRED){
+					startLoginActivity(false);
 				}
 				else {
 					ErrorHandler.showErrorDialog(c,res
@@ -268,10 +271,13 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			else{
 				String msg=RESULT.getDescription(result);
 				if(msg!=null){
-					ErrorHandler.showErrorDialog(c, res.getString(R.string.message_failed_to_send_loadout)+ " "+result+".\n"+msg,RESULT.shouldBeReportable(result));
+					ErrorHandler.showErrorDialog(c, res.getString(R.string.message_failed_to_send_loadout)+ " "+result+".\n\n"+msg,RESULT.shouldBeReportable(result));
+				}
+				else if(result==RESULT.SESSION_EXPIRED){
+					startLoginActivity(false);
 				}
 				else if(result==RESULT.NOSTATS){
-					ErrorHandler.showErrorDialog(c,res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\nYour soldier ("+Client.getInstance().getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
+					ErrorHandler.showErrorDialog(c,res.getString(R.string.message_failed_to_send_loadout)+" "+result+".\n\nYour soldier ("+Client.getInstance().getPersonaName()+") was not found. Maybe you do not own BF4 or have not played it yet. If that is not the case please report the problem, so I can investigate it.");
 					ErrorHandler.reportToAnalytics(c,"action","send","nostats");
 				}
 				else {
@@ -291,7 +297,6 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 	private static final int LOGIN_ACTIVITY_RESULT=1;
 	private ProgressDialog progressDialog;
 	private HashMap<AsyncTask<Loadout,?,?>,Loadout> quequedTasks;
-	private Activity activity;
 
 	private SuperActivityToast sendingToast;
 
@@ -334,14 +339,12 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 
 	private void loggedIn(final String name,final int platform) {
 		try {
-			if(activity!=null){
-				final Activity context = activity;
 				this.runOnUiThread(new Runnable() {
 
 					@Override
 					public void run() {
 						
-						SuperCardToast toast = SuperCardToast.create(context,
+						SuperCardToast toast = SuperCardToast.create(getActivity(),
 								"Logged in with soldier: " + name + " on "
 										+ Constants.getPlatformFromInt(platform), SuperToast.Duration.LONG);
 						toast.setBackground(SuperToast.Background.GREEN);
@@ -350,7 +353,6 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 					}
 
 				});
-			}
 		} catch (Exception e) {
 			Logger.e(TAG, "Error while showing logged in Toast",e);
 			ErrorHandler.reportError(this,e);
@@ -377,6 +379,9 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			Logger.setDebugMode(false);//Disable debug mode if in emulator
 			Constants.GA_DRY_RUN=true;//Stop GA logging
 		}
+		
+		Logger.addRegex("\"mobileToken\":\"\\S{152}\"", "\"mobileToken\":\"removed\"");
+		Logger.addRegex("\"sessionKey\":\"\\w{32}\"", "\"sessionKey\":\"removed\"");
 
 		
 		//Initialize LoadoutManager and Client
@@ -564,18 +569,41 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 			return true;
 		}
 		else{
-			Intent i= new Intent(this,LoginActivity.class);
-			this.startActivityForResult(i, LOGIN_ACTIVITY_RESULT);
+			startLoginActivity(true);
 			return false;
 		}
+	}
+	
+	private void startLoginActivity(boolean allowRelogin){
+		Intent i= new Intent(this,LoginActivity.class);
+		i.putExtra("relogin", allowRelogin);
+		this.startActivityForResult(i, LOGIN_ACTIVITY_RESULT);
 	}
 	
 	
 	public void onActivityResult(int requestCode,int resultCode,Intent i){
 		if(requestCode==LOGIN_ACTIVITY_RESULT){
-			if(resultCode==RESULT.OK){
+			if(resultCode==Activity.RESULT_OK){
 				this.loggedIn(i.getStringExtra("name"), i.getIntExtra("platform", -1));
 				this.executeQuequedTasks();
+			}
+			else if(resultCode == Activity.RESULT_CANCELED){
+				try {
+					this.runOnUiThread(new Runnable() {
+						@Override
+						public void run() {
+							
+							SuperCardToast toast = SuperCardToast.create(getActivity(),
+									"You have to login to use this app", SuperToast.Duration.LONG);
+							toast.setBackground(SuperToast.Background.ORANGE);
+							toast.show();
+						}
+
+					});
+			} catch (Exception e) {
+				Logger.e(TAG, "Error while showing logged in Toast",e);
+				ErrorHandler.reportError(this,e);
+			}
 			}
 		}
 	}
@@ -595,6 +623,7 @@ public class LoadoutMainActivity extends SherlockFragmentActivity implements
 		for(AsyncTask<Loadout,?,?> task : quequedTasks.keySet()){
 			task.execute(quequedTasks.get(task));
 		}
+		quequedTasks.clear();
 	}
 
 }

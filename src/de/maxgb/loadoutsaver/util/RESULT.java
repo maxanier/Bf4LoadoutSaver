@@ -8,20 +8,22 @@ package de.maxgb.loadoutsaver.util;
  */
 public class RESULT {
 	// Result constants
-	public final static int OK = 0;
-	public final static int REQUESTFAILED = 1;
-	public final static int CONNECTING_PROBLEM=5;
-	public final static int INTERNALSERVERERROR = 9;
-	public final static int OTHERERROR=10;
-	public final static int TIMEOUT = 12;
-	public final static int LOGINCREDENTIALSERROR = 13;
-	public final static int NOSTATS=14;
-	//public final static int WAITFORPERSONA=15;
-	public final static int NOPERSONA=16;
-	public final static int MIXING_LOADOUTS=17;
+	public final static int OK = 1;
+	public final static int REQUESTFAILED = 2;
+	public final static int CONNECTING_PROBLEM=3;
+	public final static int INTERNALSERVERERROR = 4;
+	public final static int OTHERERROR=5;
+	public final static int TIMEOUT = 6;
+	public final static int LOGINCREDENTIALSERROR = 7;
+	public final static int NOSTATS=8;
+	public final static int NOPERSONA=9;
+	public final static int MIXING_LOADOUTS=10;
+	public final static int SESSION_EXPIRED=11;
 	
 	public final static String getDescription(int result){
 		switch(result){
+		case REQUESTFAILED:
+			return "There was a problem executing you request, please try again or report this error";
 		case CONNECTING_PROBLEM:
 			return "There is a problem with the connecting to the battlelog servers. Try again later or report this problem.";
 		case INTERNALSERVERERROR:

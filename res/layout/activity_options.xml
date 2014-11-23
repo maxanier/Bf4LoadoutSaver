@@ -2,42 +2,17 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
 
-	<TableLayout
+<TableLayout
 	    android:layout_width="fill_parent"
 	    android:layout_height="377dp" >
 	
-	    <TextView
-	        android:id="@+id/textView1"
+	    
+		<Button
+	        android:id="@+id/button_reset_login"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
-	        android:text="Battlelog Email"
-	        android:gravity="center"
-	        android:textAppearance="?android:attr/textAppearanceMedium" />
-	
-	    <EditText
-	        android:id="@+id/edit_email"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:singleLine="true" >
-	
-	        <requestFocus />
-	    </EditText>
-	
-	    <TextView
-	        android:id="@+id/textView2"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="Battlelog Password"
-	        android:gravity="center"
-	        android:textAppearance="?android:attr/textAppearanceMedium" />
-	
-	    <EditText
-	        android:id="@+id/edit_password"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:inputType="textPassword"
-	        android:singleLine="true" />
-
+	        android:onClick="resetLogin"
+	        android:text="@string/reset_login" />
 	    <CheckBox
 	        android:id="@+id/checkBox_analyse"
 	        android:layout_width="wrap_content"
@@ -62,7 +37,7 @@
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
 	        android:onClick="save"
-	        android:text="@string/finsihed" />
+	        android:text="@string/finished" />
 
 	    <Button
 	        android:id="@+id/button3"

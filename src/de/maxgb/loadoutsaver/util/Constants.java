@@ -16,6 +16,8 @@ public class Constants {
 	public final static String ANALYSE_LOADOUT_KEY = "analyse_loadout";
 	public final static String KEEP_SCREEN_ON_KEY = "keep_screen_on";
 	public final static String MIX_LOADOUTS_KEY="mix_loadouts";
+	public final static String MOBILE_TOKEN_KEY="mobile_token";
+	public final static String USER_ID="user_id";
 
 	// URLs
 	public final static String LOGIN_URL = "https://battlelog.battlefield.com/mobile/gettoken";

@@ -3,10 +3,12 @@ package de.maxgb.loadoutsaver.dialogs;
 import de.maxgb.loadoutsaver.R;
 import de.maxgb.loadoutsaver.R.id;
 import de.maxgb.loadoutsaver.R.layout;
+import de.maxgb.loadoutsaver.util.Constants;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
@@ -34,15 +36,23 @@ public class LoginCredentialsDialog extends DialogFragment{
 	    // Pass null as the parent view because its going in the dialog layout
 	    View view=inflater.inflate(R.layout.dialog_login_credentials, null);
 
+	    final SharedPreferences pref=getActivity().getSharedPreferences(Constants.PREF_NAME, 0);
+	    
+	    String email=pref.getString(Constants.EMAIL_KEY, "");
+	    String pass=pref.getString(Constants.PASSWORD_KEY, "");
+	    
 	    editEmail=(EditText)view.findViewById(R.id.login_dialog_email);
 	    editPassword=(EditText)view.findViewById(R.id.login_dialog_password);
 	    
+	    editEmail.setText(email);
+	    editPassword.setText(pass);
 	    
 	    builder.setView(view)
 	    // Add action buttons
 	           .setPositiveButton("Login", new DialogInterface.OnClickListener() {
 	               @Override
 	               public void onClick(DialogInterface dialog, int id) {
+	            	   pref.edit().putString(Constants.EMAIL_KEY, getEmail()).putString(Constants.PASSWORD_KEY, getPass()).apply();
 	                   mListener.onEntered(getEmail(),getPass());
 	               }
 	           })

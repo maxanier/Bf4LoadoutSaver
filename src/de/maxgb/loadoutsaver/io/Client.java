@@ -93,8 +93,8 @@ public class Client implements IPersonaListener {
 				response.getEntity().writeTo(out);
 				out.close();
 				responseString = out.toString();
-				//Test String for multiple personas: String responseString = "{\"data\":{\"pushToken\":\"1404492198;5eab7a96ed028e4d61b7b1b2f5c1b1d018cac385\",\"rollouts\":[\"LIVE_SCOREBOARD\",\"SERVERBANNER_UPLOAD\",\"ESPORT_MATCHES\",\"ESPORT_MATCHES_PC\",\"SERVERBANNER_UPLOAD_PS3\",\"ESPORT_MATCHES_PS3\",\"SERVERBANNER_UPLOAD_XBOX\",\"ESPORT_MATCHES_XBOX\",\"BF3LOADOUT\",\"CLUB_EMBLEMS\",\"WARSAW_RESET_STATS\",\"USERNPS\",\"APP_PROMOTION\",\"BFH_COMMUNITY_MISSIONS\",\"BFH_MOBILE\"],\"userGameExpansions\":[],\"personas\":[{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403815068,\"firstPartyId\":\"\",\"personaId\":\"376180755\",\"personaName\":\"BlueTig3r131\",\"gamesLegacy\":\"0\",\"namespace\":\"ps3\",\"gamesJson\":\"{\\\"32\\\":\\\"10240\\\",\\\"4\\\":\\\"0\\\"}\",\"games\":{\"32\":\"10240\",\"4\":\"0\"},\"clanTag\":\"\"},{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403815068,\"firstPartyId\":\"\",\"personaId\":\"1075332762\",\"personaName\":\"Into_The_World13\",\"gamesLegacy\":\"0\",\"namespace\":\"ps3\",\"gamesJson\":\"{\\\"32\\\":\\\"10240\\\",\\\"4\\\":\\\"0\\\"}\",\"games\":{\"32\":\"10240\",\"4\":\"0\"},\"clanTag\":\"\"},{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403208816,\"firstPartyId\":\"\",\"personaId\":\"1075338761\",\"personaName\":\"blackoutidk\",\"gamesLegacy\":\"0\",\"namespace\":\"cem_ea_id\",\"gamesJson\":\"{\\\"1\\\":\\\"0\\\"}\",\"games\":{\"1\":\"0\"},\"clanTag\":\"\"}],\"clientId\":null,\"activePersonas\":{\"8192\":{\"platform\":32,\"game\":8192,\"persona\":{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403815068,\"firstPartyId\":\"\",\"personaId\":\"1075332762\",\"personaName\":\"Into_The_World13\",\"gamesLegacy\":\"0\",\"namespace\":\"ps3\",\"gamesJson\":\"{\\\"32\\\":\\\"10240\\\",\\\"4\\\":\\\"0\\\"}\",\"games\":{\"32\":10240,\"4\":0},\"clanTag\":\"\"},\"userId\":\"2955057794699152819\",\"personaId\":\"1075332762\"},\"2\":null},\"isOmahaUser\":true,\"sessionKey\":\"palst53rr6upouysy9wrhavfr54wq6wk\",\"mobileToken\":\"PApQio3PetqeUPe-H19MDhLxkcm06_505MJMHxfl2yqSMxuTI278YMsghEadgSKFMRTqdk4hRc6vVt6nXzsVksIbHNNe8JnioZ3ucuxZ-YiLJe7Yf0I5Bmkpy37MnU4kf1ywy4n2FSMrxQc2H2Dh_yG1WKAoEfzG_WZUDw0GPYU.\",\"isWarsawPremiumUser\":false,\"isWarsawUser\":true,\"user\":{\"username\":\"blackoutidk\",\"gravatarMd5\":\"7371dc42d2d9731feca519e305f89678\",\"userId\":\"2955057794699152819\",\"createdAt\":1403208815,\"presence\":{\"onlineGame\":{\"platform\":32,\"game\":2048,\"personaId\":\"1075332762\"},\"userId\":\"2955057794699152819\",\"playingMp\":{\"serverGuid\":\"3a8bfb53-b838-484a-8aec-99d32d4a836e\",\"platform\":32,\"personaId\":\"1075332762\",\"gameId\":\"720575940390419858\",\"role\":1,\"gameExpansions\":[0],\"serverName\":\"-[DICE]- BF4 TDM - Normal 140286\",\"gameMode\":\"32\",\"game\":2048,\"levelName\":\"MP_Naval\"},\"updatedAt\":1404448961,\"isPlaying\":true,\"presenceStates\":\"266\",\"isOnline\":true}}},\"success\":1}";
-				//Logger.i(TAG, "Response String: " + responseString);
+				//Test String for multiple personas: responseString = "{\"data\":{\"pushToken\":\"1404492198;5eab7a96ed028e4d61b7b1b2f5c1b1d018cac385\",\"rollouts\":[\"LIVE_SCOREBOARD\",\"SERVERBANNER_UPLOAD\",\"ESPORT_MATCHES\",\"ESPORT_MATCHES_PC\",\"SERVERBANNER_UPLOAD_PS3\",\"ESPORT_MATCHES_PS3\",\"SERVERBANNER_UPLOAD_XBOX\",\"ESPORT_MATCHES_XBOX\",\"BF3LOADOUT\",\"CLUB_EMBLEMS\",\"WARSAW_RESET_STATS\",\"USERNPS\",\"APP_PROMOTION\",\"BFH_COMMUNITY_MISSIONS\",\"BFH_MOBILE\"],\"userGameExpansions\":[],\"personas\":[{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403815068,\"firstPartyId\":\"\",\"personaId\":\"376180755\",\"personaName\":\"BlueTig3r131\",\"gamesLegacy\":\"0\",\"namespace\":\"ps3\",\"gamesJson\":\"{\\\"32\\\":\\\"10240\\\",\\\"4\\\":\\\"0\\\"}\",\"games\":{\"32\":\"10240\",\"4\":\"0\"},\"clanTag\":\"\"},{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403815068,\"firstPartyId\":\"\",\"personaId\":\"1075332762\",\"personaName\":\"Into_The_World13\",\"gamesLegacy\":\"0\",\"namespace\":\"ps3\",\"gamesJson\":\"{\\\"32\\\":\\\"10240\\\",\\\"4\\\":\\\"0\\\"}\",\"games\":{\"32\":\"10240\",\"4\":\"0\"},\"clanTag\":\"\"},{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403208816,\"firstPartyId\":\"\",\"personaId\":\"1075338761\",\"personaName\":\"blackoutidk\",\"gamesLegacy\":\"0\",\"namespace\":\"cem_ea_id\",\"gamesJson\":\"{\\\"1\\\":\\\"0\\\"}\",\"games\":{\"1\":\"0\"},\"clanTag\":\"\"}],\"clientId\":null,\"activePersonas\":{\"8192\":{\"platform\":32,\"game\":8192,\"persona\":{\"picture\":\"\",\"userId\":\"2955057794699152819\",\"user\":null,\"updatedAt\":1403815068,\"firstPartyId\":\"\",\"personaId\":\"1075332762\",\"personaName\":\"Into_The_World13\",\"gamesLegacy\":\"0\",\"namespace\":\"ps3\",\"gamesJson\":\"{\\\"32\\\":\\\"10240\\\",\\\"4\\\":\\\"0\\\"}\",\"games\":{\"32\":10240,\"4\":0},\"clanTag\":\"\"},\"userId\":\"2955057794699152819\",\"personaId\":\"1075332762\"},\"2\":null},\"isOmahaUser\":true,\"sessionKey\":\"palst53rr6upouysy9wrhavfr54wq6wk\",\"mobileToken\":\"PApQio3PetqeUPe-H19MDhLxkcm06_505MJMHxfl2yqSMxuTI278YMsghEadgSKFMRTqdk4hRc6vVt6nXzsVksIbHNNe8JnioZ3ucuxZ-YiLJe7Yf0I5Bmkpy37MnU4kf1ywy4n2FSMrxQc2H2Dh_yG1WKAoEfzG_WZUDw0GPYU.\",\"isWarsawPremiumUser\":false,\"isWarsawUser\":true,\"user\":{\"username\":\"blackoutidk\",\"gravatarMd5\":\"7371dc42d2d9731feca519e305f89678\",\"userId\":\"2955057794699152819\",\"createdAt\":1403208815,\"presence\":{\"onlineGame\":{\"platform\":32,\"game\":2048,\"personaId\":\"1075332762\"},\"userId\":\"2955057794699152819\",\"playingMp\":{\"serverGuid\":\"3a8bfb53-b838-484a-8aec-99d32d4a836e\",\"platform\":32,\"personaId\":\"1075332762\",\"gameId\":\"720575940390419858\",\"role\":1,\"gameExpansions\":[0],\"serverName\":\"-[DICE]- BF4 TDM - Normal 140286\",\"gameMode\":\"32\",\"game\":2048,\"levelName\":\"MP_Naval\"},\"updatedAt\":1404448961,\"isPlaying\":true,\"presenceStates\":\"266\",\"isOnline\":true}}},\"success\":1}";
+				//Logger.i(TAG, "Response String: " + replacePersonalInfo(responseString));
 
 				JSONObject responseJson = new JSONObject(responseString);
 				
@@ -121,6 +121,9 @@ public class Client implements IPersonaListener {
 
 			} else {
 				Logger.w(TAG, "Logging http request not ok: "+response.getStatusLine().getStatusCode()+":"+response.getStatusLine().getReasonPhrase());
+				if(response.getStatusLine().getStatusCode()==HttpStatus.SC_INTERNAL_SERVER_ERROR){
+					return RESULT.INTERNALSERVERERROR;
+				}
 				return RESULT.CONNECTING_PROBLEM;
 			}
 
@@ -184,6 +187,9 @@ public class Client implements IPersonaListener {
 			}
 			else{
 				Logger.w(TAG, "Logging http request not ok: "+response.getStatusLine().getStatusCode()+":"+response.getStatusLine().getReasonPhrase());
+				if(response.getStatusLine().getStatusCode()==HttpStatus.SC_INTERNAL_SERVER_ERROR){
+					return RESULT.INTERNALSERVERERROR;
+				}
 				return RESULT.CONNECTING_PROBLEM;
 			}
 		}
@@ -231,6 +237,9 @@ public class Client implements IPersonaListener {
 			}
 			else{
 				Logger.w(TAG, "Get authcode http request not ok: "+response.getStatusLine().getStatusCode()+":"+response.getStatusLine().getReasonPhrase());
+				if(response.getStatusLine().getStatusCode()==HttpStatus.SC_INTERNAL_SERVER_ERROR){
+					return RESULT.INTERNALSERVERERROR;
+				}
 				return RESULT.CONNECTING_PROBLEM;
 			}
 		} catch (IOException e) {
@@ -289,11 +298,56 @@ public class Client implements IPersonaListener {
 		}
 	}
 	
+	public synchronized int relogin(String mobileToken,String userId) throws UnexpectedStuffException{
+		String responseString=null;
+		try {
+			
+			Logger.i(TAG, "Re Loginvorgang gestartet");
+			HttpResponse response = executePostRequest(Constants.LOGIN_URL,null,"mobileToken",mobileToken,"userId",userId);
+			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				response.getEntity().writeTo(out);
+				out.close();
+				responseString = out.toString();
+				Logger.i(TAG, "RElogin answer: "+responseString); //TODO remove
+				JSONObject responseJson=new JSONObject(responseString);
+				
+				if(responseJson.getInt("success")==0){
+					Logger.w(TAG, "Relogin failed: "+responseString);
+					return RESULT.REQUESTFAILED;
+				}
+				else{
+					return processLogin(responseJson.getJSONObject("data"));
+				}
+			}
+			else{
+				Logger.w(TAG, "Logging http request not ok: "+response.getStatusLine().getStatusCode()+":"+response.getStatusLine().getReasonPhrase());
+				if(response.getStatusLine().getStatusCode()==HttpStatus.SC_INTERNAL_SERVER_ERROR){
+					return RESULT.INTERNALSERVERERROR;
+				}
+				return RESULT.CONNECTING_PROBLEM;
+			}
+		}
+		catch (IOException e) {
+			Logger.e(TAG, "IOException during relogin",e);
+			return RESULT.CONNECTING_PROBLEM;
+		} catch (JSONException e) {
+			Logger.e(TAG, "Failed to parse response to JSON",e);
+			if(responseString!=null){
+				Logger.i(TAG, "Response: "+responseString);
+			}
+			throw new UnexpectedStuffException("Response json structure unlike expected",Location.LOGIN);
+		}
+	}
+	
 	private int processLogin(JSONObject data) throws UnexpectedStuffException{
 		// Read out
 		// values------------------------------------------------------------------
 		sessionKey = null;
 		persona=null;
+		String mobileToken=null;
+		String userId=null;
 		ArrayList<Persona> personas = new ArrayList<Persona>();
 		
 		try {
@@ -325,7 +379,14 @@ public class Client implements IPersonaListener {
 					
 					
 				}
-
+				
+				try {
+					mobileToken=data.getString("mobileToken");
+					userId=data.getJSONObject("user").getString("userId");
+				} catch (JSONException e) {
+					Logger.e(TAG, "Failed to read out mobile token or userId",e);
+				}
+				
 				
 			} else {
 				throw new JSONException("Data json null");
@@ -341,8 +402,8 @@ public class Client implements IPersonaListener {
 			throw new UnexpectedStuffException("Cant find session key",Location.LOGIN);
 		}
 
-		Logger.i(TAG, "Login analysis complete: SessionKey: "
-				+ sessionKey+". Found "+personas.size()+" personas: "+personas.toString());
+		Logger.i(TAG, "Login analysis complete: SessionKey: cencored,length:"
+				+ sessionKey.length()+". Found "+personas.size()+" personas: "+personas.toString());
 		
 		if(personas.size()==0){
 			return RESULT.NOPERSONA;
@@ -351,10 +412,8 @@ public class Client implements IPersonaListener {
 
 		if(personas.size()==1){
 			persona=personas.get(0);
-			if (conListener != null)
-				conListener.loggedIn(persona);
 			Logger.i(TAG, "Only one persona, so skipping choosing part");
-			return RESULT.OK;
+			
 		}
 		else{
 			Logger.i(TAG, "Multiple personas, asking user to choose");
@@ -362,9 +421,10 @@ public class Client implements IPersonaListener {
 			while(persona==null){
 				Thread.yield();
 			}
-			conListener.loggedIn(persona);
-			return RESULT.OK;
 		}
+		if (conListener != null)
+			conListener.loggedIn(persona,mobileToken,userId);
+		return RESULT.OK;
 	}
 	
 	/**
@@ -386,7 +446,7 @@ public class Client implements IPersonaListener {
 		Long tsLong = System.currentTimeMillis() / 1000;
 
 		try {
-			HttpResponse response = executePostRequest(Constants.GETLOADOUT_URL,sessionKey,"personaId",persona.personaId,"personaName",persona.personaName,"platfromInt",""+persona.platform);
+			HttpResponse response = executePostRequest(Constants.GETLOADOUT_URL,sessionKey,"personaId",persona.personaId,"personaName",persona.personaName,"platformInt",""+persona.platform);
 			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				response.getEntity().writeTo(out);
@@ -417,10 +477,9 @@ public class Client implements IPersonaListener {
 						if(responseJson.has("error")){
 							if(responseJson.getString("error").equals("SESSION_NOT_FOUND")){
 								//Session probably expired
-								Logger.w(TAG, "Session is probably expired -> relogin");
-								persona=null;
-								sessionKey="";
-								return saveCurrentLoadout(loadout);
+								Logger.w(TAG, "Session is probably expired");
+								loggedInSince=0;
+								return RESULT.SESSION_EXPIRED;
 							}
 							else if(responseJson.getString("error").equals("nostats")){
 								//Soldier does not exist or has not played yet
@@ -445,6 +504,12 @@ public class Client implements IPersonaListener {
 					} catch (JSONException e) {
 						Logger.e(TAG, "Failed to get player informations",e);
 					}
+					
+					if(data.has("error")&&data.getString("error").equals("nostats")){
+						//Soldier does not exist or has not played yet
+						return RESULT.NOSTATS;
+					}
+					
 					currentLoadout = data
 							.getJSONObject(Constants.BJSON_CURRENT_LOADOUT);
 					vehicles = currentLoadout
@@ -502,8 +567,12 @@ public class Client implements IPersonaListener {
 				lastFullLoadout = currentLoadout;
 				return RESULT.OK;
 
-			} else {
+			} 
+				else {
 				Logger.w(TAG, "Get Loadout http request not ok: "+response.getStatusLine().getStatusCode()+":"+response.getStatusLine().getReasonPhrase());
+				if(response.getStatusLine().getStatusCode()==HttpStatus.SC_INTERNAL_SERVER_ERROR){
+					return RESULT.INTERNALSERVERERROR;
+				}
 				return RESULT.CONNECTING_PROBLEM;
 			}
 
@@ -532,7 +601,7 @@ public class Client implements IPersonaListener {
 		
 
 		try {
-			HttpResponse response = executePostRequest(Constants.SAVELOADOUT_URL,sessionKey,"personaId",persona.personaId,"personaName",persona.personaName,"platfromInt",""+persona.platform);
+			HttpResponse response = executePostRequest(Constants.SAVELOADOUT_URL,sessionKey,"personaId",persona.personaId,"personaName",persona.personaName,"platformInt",""+persona.platform,"loadout",loadout);
 
 			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -551,11 +620,10 @@ public class Client implements IPersonaListener {
 						Logger.w(TAG, "Repsonse without success: "+responseString);
 						if(responseJson.has("error")){
 							if(responseJson.getString("error").equals("SESSION_NOT_FOUND")){
-								Logger.w(TAG, "Session is probably expired -> relogin");
 								//Session probably expired
-								persona=null;
-								sessionKey="";
-								return sendLoadout(loadout,id);
+								Logger.w(TAG, "Session is probably expired");
+								loggedInSince=0;
+								return RESULT.SESSION_EXPIRED;
 							}
 							else if(responseJson.getString("error").equals("nostats")){
 								//Soldier does not exist or has not played yet
@@ -577,6 +645,9 @@ public class Client implements IPersonaListener {
 				
 			} else {
 				Logger.w(TAG, "Send Loadout http request not ok: "+response.getStatusLine().getStatusCode()+":"+response.getStatusLine().getReasonPhrase());
+				if(response.getStatusLine().getStatusCode()==HttpStatus.SC_INTERNAL_SERVER_ERROR){
+					return RESULT.INTERNALSERVERERROR;
+				}
 				return RESULT.CONNECTING_PROBLEM;
 			}
 		} catch (IOException e) {
@@ -623,7 +694,7 @@ public class Client implements IPersonaListener {
 	
 	public interface IConnectionListener {
 
-		public void loggedIn(Persona persona);
+		public void loggedIn(Persona persona,String mobileToken,String userId);
 		
 		public void choosePersona(ArrayList<Persona> personas, IPersonaListener listener);
 		
@@ -634,9 +705,6 @@ public class Client implements IPersonaListener {
 	public void choosenPersona(Persona persona) {
 		synchronized(persona){
 			this.persona=persona;
-			if(conListener!=null){
-				conListener.loggedIn(persona);
-			}
 		}
 		
 	}
@@ -682,8 +750,13 @@ public class Client implements IPersonaListener {
 		paare.add(new BasicNameValuePair("timestamp", tsLong.toString()));
 		httppost.setEntity(new UrlEncodedFormEntity(paare));
 		// -----------------------------------------------
-
 		return httpclient.execute(httppost);
+	}
+	
+	public void resetLogin(){
+		loggedInSince=0;
+		persona=null;
+		sessionKey=null;
 	}
 
 

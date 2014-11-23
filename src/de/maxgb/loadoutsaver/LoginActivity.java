@@ -28,6 +28,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -46,6 +47,14 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_login);
 		Client.getInstance().setConnectionListener(this);
+		
+		SharedPreferences pref=getSharedPreferences(Constants.PREF_NAME,0);
+		String mobileToken=pref.getString(Constants.MOBILE_TOKEN_KEY,null);
+		String userId=pref.getString(Constants.USER_ID, null);
+		if(mobileToken!=null&&userId!=null){
+			ReLoginTask task=new ReLoginTask();
+			task.execute(mobileToken,userId);
+		}
 	}
 	
 	public void loginCredentials(View v){
@@ -111,11 +120,15 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 	}
 
 	@Override
-	public void loggedIn(Persona persona) {
+	public void loggedIn(Persona persona,String mobileToken,String userId) {
+		
+		if(mobileToken!=null&&userId!=null){
+			getSharedPreferences(Constants.PREF_NAME,0).edit().putString(Constants.MOBILE_TOKEN_KEY, mobileToken).putString(Constants.USER_ID, userId).apply();
+		}
 		Intent i=new Intent();
 		i.putExtra("name", persona.personaName);
 		i.putExtra("platform", persona.platform);
-		this.setResult(RESULT.OK, i);
+		this.setResult(Activity.RESULT_OK, i);
 		this.finish();
 		
 	}
@@ -177,6 +190,42 @@ public class LoginActivity extends SherlockFragmentActivity implements LoginCred
 							+ " " + result);
 					ErrorHandler.reportToAnalytics(c,"action","login","unknown_error");
 				}
+			}
+		}
+		
+	}
+	
+private class ReLoginTask extends AsyncTask<String,Void,Integer>{
+		
+		public void onPreExecute(){
+			Logger.i(TAG, "Show ProgressDialog");
+			progressDialog = new ProgressDialog(LoginActivity.this);
+			progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+			progressDialog.setTitle("Trying to log in");
+			progressDialog.setCancelable(false);
+			progressDialog.setIndeterminate(false);
+			progressDialog.show();
+		}
+
+		@Override
+		protected Integer doInBackground(String... params) {
+			try {
+				if(params==null||params.length!=2){
+					throw new UnexpectedStuffException("The params count for the Logintask is wrong",Location.LOGIN);
+				}
+				Logger.i(TAG, "Starting relogin");
+				return Client.getInstance().relogin(params[0], params[1]);
+			} catch (UnexpectedStuffException e) {
+				Logger.e(TAG, e.toString());
+				return RESULT.OTHERERROR;
+			}
+		}
+		
+		@Override
+		public void onPostExecute(Integer result){
+			progressDialog.dismiss();
+			if(result!=RESULT.OK){
+				
 			}
 		}
 		
