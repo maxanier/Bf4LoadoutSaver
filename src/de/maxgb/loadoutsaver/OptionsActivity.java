@@ -11,12 +11,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.dm.zbar.android.scanner.ZBarScannerActivity;
 import com.google.analytics.tracking.android.EasyTracker;
-import com.google.analytics.tracking.android.MapBuilder;
 
 import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.io.Client;
@@ -28,7 +25,6 @@ public class OptionsActivity extends Activity {
 	private CheckBox analyse;
 	private CheckBox screenLock;
 	private CheckBox mixLoadouts;
-	
 
 	public void abort(View v) {
 		Logger.i(TAG, "Abort");
@@ -45,6 +41,12 @@ public class OptionsActivity extends Activity {
 			version = pInfo.versionName;
 		} catch (NameNotFoundException e) {
 			e.printStackTrace();
+		}
+		if (Client.getInstance().isLoggedIn()) {
+			Logger.i(TAG, "Client claims to be logged in: "
+					+ Client.getInstance().getPersonaName());
+		} else {
+			Logger.i(TAG, "Client doesnt seem to be logged in");
 		}
 
 		Intent i = new Intent(Intent.ACTION_SEND_MULTIPLE);
@@ -87,8 +89,9 @@ public class OptionsActivity extends Activity {
 				false));
 		screenLock.setChecked(prefs.getBoolean(Constants.KEEP_SCREEN_ON_KEY,
 				false));
-		
-		mixLoadouts.setChecked(prefs.getBoolean(Constants.MIX_LOADOUTS_KEY, false));
+
+		mixLoadouts.setChecked(prefs.getBoolean(Constants.MIX_LOADOUTS_KEY,
+				false));
 	}
 
 	@Override
@@ -103,12 +106,22 @@ public class OptionsActivity extends Activity {
 		EasyTracker.getInstance(this).activityStop(this); // Add this method.
 	}
 
+	public void resetLogin(View v) {
+		Logger.i(TAG, "ResetLogin");
+		Client.getInstance().resetLogin();
+		getSharedPreferences(Constants.PREF_NAME, 0).edit()
+				.remove(Constants.EMAIL_KEY).remove(Constants.PASSWORD_KEY)
+				.remove(Constants.MOBILE_TOKEN_KEY).remove(Constants.USER_ID)
+				.commit();
+		Toast.makeText(this, "Login reset", Toast.LENGTH_SHORT).show();
+		;
+	}
+
 	public void save(View v) {
-		
+
 		Logger.i(TAG, "Saving");
 		SharedPreferences prefs = getSharedPreferences(Constants.PREF_NAME, 0);
 
-		
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putBoolean(Constants.ANALYSE_LOADOUT_KEY, analyse.isChecked());
 		editor.putBoolean(Constants.KEEP_SCREEN_ON_KEY, screenLock.isChecked());
@@ -116,12 +129,5 @@ public class OptionsActivity extends Activity {
 		editor.commit();
 		finish();
 
-	}
-	
-	public void resetLogin(View v){
-		Logger.i(TAG, "ResetLogin");
-		Client.getInstance().resetLogin();
-		getSharedPreferences(Constants.PREF_NAME,0).edit().remove(Constants.EMAIL_KEY).remove(Constants.PASSWORD_KEY).remove(Constants.MOBILE_TOKEN_KEY).remove(Constants.USER_ID).commit();
-		Toast.makeText(this, "Login reset", Toast.LENGTH_SHORT).show();;
 	}
 }

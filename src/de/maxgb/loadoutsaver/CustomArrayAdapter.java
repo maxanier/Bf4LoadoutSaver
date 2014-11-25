@@ -73,7 +73,7 @@ public class CustomArrayAdapter extends ArrayAdapter<Loadout> {
 		// Logger.i(TAG,"Creating View for Loadout Type: "+obj.getType());
 
 		imageView.setImageBitmap(obj.getImage(context));
-		
+
 		convertView.setBackgroundColor(obj.getColor());
 
 		return convertView;

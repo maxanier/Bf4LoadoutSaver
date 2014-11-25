@@ -14,13 +14,38 @@ import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.R;
 
 public class Loadout implements Cloneable {
+	public static Loadout fromJSON(JSONObject json) {
+
+		try {
+			Loadout l = new Loadout();
+			l.name = json.getString("name");
+			l.loadout = json.getJSONObject("loadout");
+			l.weapons = json.getBoolean("weapons");
+			l.vehicles = json.getBoolean("vehicles");
+			l.kits = json.getBoolean("kits");
+			l.color = json.getInt("color");
+			if (json.has("personalId")) {
+				l.personalId = json.getString("personalId");
+			}
+
+			return l;
+		} catch (JSONException e) {
+			Logger.e("Loadout", "Failed to create Loadout frome json", e);
+			return null;
+		}
+	}
 	private String name;
 	private JSONObject loadout;
 	private boolean weapons;
 	private boolean kits;
 	private boolean vehicles;
 	private int color;
+
 	private String personalId;
+
+	private Loadout() {
+		personalId = "";
+	}
 
 	/**
 	 * 
@@ -34,25 +59,23 @@ public class Loadout implements Cloneable {
 	 *            if kits
 	 * @param vehicles
 	 *            if vehicles
-	 * @param color Color for displaying purpose
+	 * @param color
+	 *            Color for displaying purpose
 	 */
 	public Loadout(String name, JSONObject loadout, boolean weapons,
-			boolean kits, boolean vehicles,int color,String personalId) {
+			boolean kits, boolean vehicles, int color, String personalId) {
 		this.name = name;
 		this.loadout = loadout;
 		this.weapons = weapons;
 		this.kits = kits;
 		this.vehicles = vehicles;
-		this.color=color;
-	}
-	
-	private Loadout(){
-		personalId="";
+		this.color = color;
 	}
 
 	@Override
 	public Loadout clone() {
-		return new Loadout(name, loadout, weapons, kits, vehicles,color,personalId);
+		return new Loadout(name, loadout, weapons, kits, vehicles, color,
+				personalId);
 	}
 
 	public boolean containsKits() {
@@ -65,6 +88,10 @@ public class Loadout implements Cloneable {
 
 	public boolean containsWeapons() {
 		return weapons;
+	}
+
+	public int getColor() {
+		return color;
 	}
 
 	public Bitmap getImage(Context context) {
@@ -100,13 +127,31 @@ public class Loadout implements Cloneable {
 	public String getName() {
 		return name;
 	}
-	
-	public int getColor(){
-		return color;
+
+	public String getPersonaId() {
+		return personalId;
 	}
 
 	public void setLoadout(JSONObject loadout) {
 		this.loadout = loadout;
+	}
+
+	public void setPersonaId(String p) {
+		this.personalId = p;
+	}
+
+	public JSONObject toJson() {
+		JSONObject json = new JSONObject();
+		try {
+			return json.put("name", name).put("loadout", loadout)
+					.put("weapons", weapons).put("vehicles", vehicles)
+					.put("kits", kits).put("color", color)
+					.put("personalId", personalId);
+		} catch (JSONException e) {
+			Logger.e("Loadout", "Failed to create Json from Loadout", e);
+			return json;
+		}
+
 	}
 
 	@Override
@@ -115,49 +160,6 @@ public class Loadout implements Cloneable {
 		String s = " ";
 		return name + s + (weapons ? "1" : "0") + s + (kits ? "1" : "0") + s
 				+ (vehicles ? "1" : "0");
-	}
-	
-	public JSONObject toJson(){
-		JSONObject json=new JSONObject();
-		try {
-			return json.put("name", name).put("loadout", loadout).put("weapons", weapons).put("vehicles",vehicles).put("kits", kits).put("color", color).put("personalId",personalId);
-		} catch (JSONException e) {
-			Logger.e("Loadout", "Failed to create Json from Loadout",e);
-			return json;
-		}
-		
-		
-	}
-
-	
-	public static Loadout fromJSON(JSONObject json){
-		
-		
-		try {
-			Loadout l=new Loadout();
-			l.name=json.getString("name");
-			l.loadout=json.getJSONObject("loadout");
-			l.weapons=json.getBoolean("weapons");
-			l.vehicles=json.getBoolean("vehicles");
-			l.kits=json.getBoolean("kits");
-			l.color=json.getInt("color");
-			if(json.has("personalId")){
-				l.personalId=json.getString("personalId");
-			}
-			
-			return l;
-		} catch (JSONException e) {
-			Logger.e("Loadout", "Failed to create Loadout frome json",e);
-			return null;
-		}
-	}
-	
-	public void setPersonaId(String p){
-		this.personalId=p;
-	}
-	
-	public String getPersonaId(){
-		return personalId;
 	}
 
 }

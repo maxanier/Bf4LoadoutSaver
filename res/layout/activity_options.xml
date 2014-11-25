@@ -7,18 +7,19 @@
 	    android:layout_height="377dp" >
 	
 	    
-		<Button
-	        android:id="@+id/button_reset_login"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:onClick="resetLogin"
-	        android:text="@string/reset_login" />
+		
 	    <CheckBox
 	        android:id="@+id/checkBox_analyse"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
 	        android:text="@string/option_analyse"
 	        android:visibility="invisible" />
+	    <Button
+	        android:id="@+id/button_reset_login"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:onClick="resetLogin"
+	        android:text="@string/reset_login" />
 	    
 	    <CheckBox
 	        android:id="@+id/checkBox_screenlock"

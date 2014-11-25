@@ -18,11 +18,10 @@ import com.google.analytics.tracking.android.StandardExceptionParser;
 import de.maxgb.android.util.Logger;
 import de.maxgb.loadoutsaver.io.LoadoutManager;
 import de.maxgb.loadoutsaver.util.Constants;
-import de.maxgb.loadoutsaver.util.Loadout;
 
 public class ErrorHandler {
 
-	public static void reportError(Context c,Exception e) {
+	public static void reportError(Context c, Exception e) {
 		// refer to:
 		// https://developers.google.com/analytics/devguides/collection/android/v3/exceptions
 		EasyTracker easyTracker = EasyTracker.getInstance(c);
@@ -52,29 +51,40 @@ public class ErrorHandler {
 
 	}
 
-	public static void reportToAnalytics(Context c,String category, String label, String msg,
-			long value) {
+	public static void reportToAnalytics(Context c, String category,
+			String label, String msg) {
+		EasyTracker tracker = EasyTracker.getInstance(c);
+
+		tracker.send(MapBuilder.createEvent(category, label, msg, null).build());
+	}
+
+	public static void reportToAnalytics(Context c, String category,
+			String label, String msg, long value) {
 		EasyTracker tracker = EasyTracker.getInstance(c);
 
 		tracker.send(MapBuilder.createEvent(category, label, msg, value)
-				.build()); 
+				.build());
 	}
-	
-	public static void reportToAnalytics(Context c, String category, String label, String msg) {
-		EasyTracker tracker = EasyTracker.getInstance(c);
-
-		tracker.send(MapBuilder.createEvent(category, label, msg, null)
-				.build()); 
-	}
-
-	
 
 	/**
-	 * Shows a Error dialog with the given message and offers if report is true a report button
+	 * Shows a Error dialog with the given message and with a report button
+	 * 
 	 * @param msg
-	 * @param report whether to show a report button or not
 	 */
-	public static void showErrorDialog(final Context c,String msg, boolean report) {
+	public static void showErrorDialog(Context c, String msg) {
+		showErrorDialog(c, msg, true);
+	}
+
+	/**
+	 * Shows a Error dialog with the given message and offers if report is true
+	 * a report button
+	 * 
+	 * @param msg
+	 * @param report
+	 *            whether to show a report button or not
+	 */
+	public static void showErrorDialog(final Context c, String msg,
+			boolean report) {
 
 		// 1. Instantiate an AlertDialog.Builder with its constructor
 		AlertDialog.Builder builder = new AlertDialog.Builder(c);
@@ -93,14 +103,14 @@ public class ErrorHandler {
 							}
 						});
 
-		if(report){
+		if (report) {
 			builder.setPositiveButton(R.string.report,
 					new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int id) {
-					showErrorReportingDialog(c,message);
-				}
-			});
+						@Override
+						public void onClick(DialogInterface dialog, int id) {
+							showErrorReportingDialog(c, message);
+						}
+					});
 		}
 		// 3. Get the AlertDialog from create()
 		AlertDialog dialog = builder.create();
@@ -108,16 +118,8 @@ public class ErrorHandler {
 		dialog.show();
 
 	}
-	
-	/**
-	 * Shows a Error dialog with the given message and with a report button
-	 * @param msg
-	 */
-	public static void showErrorDialog(Context c,String msg){
-		showErrorDialog(c,msg,true);
-	}
 
-	public static void showErrorReportingDialog(final Context c,String msg) {
+	public static void showErrorReportingDialog(final Context c, String msg) {
 
 		// 1. Instantiate an AlertDialog.Builder with its constructor
 		AlertDialog.Builder builder = new AlertDialog.Builder(c);
@@ -134,12 +136,13 @@ public class ErrorHandler {
 								PackageInfo pInfo;
 								String version = "X";
 								try {
-									pInfo = c.getPackageManager().getPackageInfo(
-											c.getPackageName(), 0);
+									pInfo = c.getPackageManager()
+											.getPackageInfo(c.getPackageName(),
+													0);
 									version = pInfo.versionName;
 								} catch (NameNotFoundException e) {
 
-									reportError(c,e);
+									reportError(c, e);
 								}
 
 								// Send the email
@@ -187,7 +190,8 @@ public class ErrorHandler {
 							@Override
 							public void onClick(DialogInterface dialog,
 									int which) {
-								reportToAnalytics(c,"action","report","abort");
+								reportToAnalytics(c, "action", "report",
+										"abort");
 
 							}
 						});
