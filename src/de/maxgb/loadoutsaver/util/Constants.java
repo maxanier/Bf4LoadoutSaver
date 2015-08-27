@@ -36,7 +36,7 @@ public class Constants {
 
 	// etc.
 	public static final int TOAST_DURATION = 3;
-	public static final String LOG_REPORT_EMAIL = "app@maxgb.de";
+	public static final String LOG_REPORT_EMAIL = "bls@maxgb.de";
 	public static final String LOG_REPORT_SUBJECT = "Error Report: Loadoutsaver version: ";
 
 	// Battlelog JSON Names
@@ -59,7 +59,7 @@ public class Constants {
 	public static final Instruction INSTRUCTION_BETA = new Instruction(
 			"Loadout Saver",
 			17,
-			"<html><body><b>Important notice</b><br>I can´t confirm that this app works for console players.<br><b>Important: You probably need to be playing BF4, when trying to send or save a loadout!</b><br>If it does thats great, if not, please don´t rate this app bad, but report the problem, so I can make it work<br>Thanks");
+			"<html><body><b>Important notice</b><br>I canÂ´t confirm that this app works for console players.<br><b>Important: You probably need to be playing BF4, when trying to send or save a loadout!</b><br>If it does thats great, if not, please donÂ´t rate this app bad, but report the problem, so I can make it work<br>Thanks");
 	public static boolean GA_DRY_RUN=false;
 
 	public static String getPlatformFromInt(int platform) {
